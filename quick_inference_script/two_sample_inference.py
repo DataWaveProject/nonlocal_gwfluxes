@@ -87,7 +87,7 @@ elif model=='attention':
     model=model.to(device)
     model.eval()
 
-out=f{model}+'_output.npz'
+out = f"{model}_output.npz"
 if model=='ann':
     Inference_and_Save_ANN_CNN(model,testset,testloader,bs_test,device,stencil,out)
 elif model=='attention':
