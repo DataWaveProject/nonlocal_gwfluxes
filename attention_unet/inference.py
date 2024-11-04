@@ -89,7 +89,7 @@ write_log(f'Model created. \n --- model size: {model.totalsize():.2f} MBs,\n ---
 PATH=pref+ckpt
 if device=='cpu':
     checkpoint=torch.load(PATH, map_location=torch.device('cpu'))
-elif:
+else:
     checkpoint=torch.load(PATH)
 model.load_state_dict(checkpoint['model_state_dict'])
 model=model.to(device)
