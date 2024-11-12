@@ -26,3 +26,20 @@ ruff = "^0.7.3"
 homepage = "https://github.com/DataWaveProject/nonlocal_gwfluxes"
 repository = "https://github.com/DataWaveProject/nonlocal_gwfluxes.git"
 issues = "https://github.com/DataWaveProject/nonlocal_gwfluxes/issues"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# set inital defaults for ruff (see
+# https://docs.astral.sh/ruff/linter/#rule-selection for more info)
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # isort (this will require imports to be sorted)
+    "I",
+]
+# ignore warnings for line-length violations (`E501`)
+ignore = ["E501"]
