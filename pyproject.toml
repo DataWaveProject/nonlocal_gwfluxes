@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "your_project_name"
+version = "0.1.0"
+description = "A description of your project"
+authors = [
+    { name="Your Name", email="your.email@example.com" }
+]
+dependencies = [
+    "netCDF4==1.7.2",
+    "numpy==2.1.3",
+    "pandas==2.2.3",
+    "torch==2.5.1",
+    "xarray==2024.10.0"
+]
+
+[project.optional-dependencies]
+# Here, you can define optional dependencies if needed.
+# For example:
+# testing = ["pytest", "pytest-cov"]
