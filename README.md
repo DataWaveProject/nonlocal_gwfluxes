@@ -17,6 +17,54 @@ The three models are schematically depicted in the animation below
 
 The models are trained on modern reanalysis ERA5 which resolves part of the atmospheric gravity wave spectrum. Since it does not resolve the mesoscale wave spectrum, the repository provides some functionality to retrain parts of the models M1-M3 trained on ERA5 to be retrained on fluxes obtained from a 1 km global IFS model which resolves the whole mesoscale wave spectrum.
 
+## Getting Started
+
+### Obtaining `nonlocal_gwfluxes`
+
+Clone the latest version of `nonlocal_gwfluxes` using the following command
+
+```bash
+git clone git@github.com:DataWaveProject/nonlocal_gwfluxes.git
+```
+
+### Install Dependencies
+
+This project uses `poetry` to manage dependencies. To install the dependencies we first need poetry.
+
+```bash
+cd nonlocal_gwfluxes
+python -m venv .nlgw
+```
+
+This will create a Python virtual environment inside our repository. Before we use this environment we must first `activate` it.
+
+```bash
+source .nlgw/bin/activate
+```
+
+> [!NOTE]
+> Your shell prompt should update. Depending on your setup, you may have something like this:
+> ```
+> (.nlgw) demo@mypc:~/nonlocal_gwfluxes$
+> ```
+
+Now we can install `poetry`
+
+```bash
+pip install poetry
+```
+
+The following command installs all of the necessary dependencies for `nonlocal_gwfluxes`.
+
+```bash
+poetry install --no-root
+```
+
+If plan to develop `nonlocal_gwfluxes`, please add the optional `develop` dependencies.
+
+```bash
+poetry install --no-root --with develop
+```
 
 ## Usage
 
@@ -29,8 +77,7 @@ To use these scripts, users will first need to install the following dependencie
 * `numpy`
 * `xarray`
 
-> [!NOTE]
-> A `pyproject.toml` or `requirements.txt` will be uploaded shortly, to make installing the dependencies easier.
+Please follow the steps installation steps above.
 
 ### Training
 The code to train M1 and M2 is contained in the `ann_cnn_training` directory. The code is split into multiple files but the main is invoked in `training.py`. The model training can be submitted as a single GPU task using the `batch.sh` script using the command:
@@ -73,4 +120,3 @@ for the attention unet models.
 
 ## References
 [1] Gupta, Aman*, Aditi Sheshadri, Sujit Roy*, Vishal Gaur, Manil Maskey, Rahul Ramachandran: "Machine Learning Global Simulation of Nonlocal Gravity Wave Propagation", International Conference on Machine Learning 2024, ML4ESM Workshop, https://arxiv.org/abs/2406.14775
-

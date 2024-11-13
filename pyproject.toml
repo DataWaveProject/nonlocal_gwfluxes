@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "nonlocal_gw"
+version = "0.0.1"
+description = "Datadriven models for predicting gravity wave fluxes in climate models."
+authors = ["amangupta2"]
+readme = "README.md"
+license = "LICENSE"
+keywords = ["non-local", "gravity waves"]
+
+[tool.poetry.dependencies]
+python = "^3.10.0"
+netCDF4 = "^1.7.2"
+numpy = "^1.26.3"
+torch = "^2.5.1"
+torchaudio = "^2.5.1"
+torchvision = "^0.20.1"
+xarray = "^2024.10.0"
+
+[tool.poetry.group.develop]
+optional = true
+
+[tool.poetry.group.develop.dependencies]
+ruff = "^0.7.3"
+
+[project.urls]
+homepage = "https://github.com/DataWaveProject/nonlocal_gwfluxes"
+repository = "https://github.com/DataWaveProject/nonlocal_gwfluxes.git"
+issues = "https://github.com/DataWaveProject/nonlocal_gwfluxes/issues"
