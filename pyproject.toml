@@ -21,6 +21,7 @@ optional = true
 
 [tool.poetry.group.develop.dependencies]
 ruff = "^0.7.3"
+pre-commit= "^4.0.1"
 
 [project.urls]
 homepage = "https://github.com/DataWaveProject/nonlocal_gwfluxes"

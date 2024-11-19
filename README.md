@@ -60,11 +60,26 @@ The following command installs all of the necessary dependencies for `nonlocal_g
 poetry install --no-root
 ```
 
-If plan to develop `nonlocal_gwfluxes`, please add the optional `develop` dependencies.
+>[!IMPORTANT]
+>If you plan to develop `nonlocal_gwfluxes`, please add the optional `develop` dependencies and complete the further setup actions detailed below.
 
 ```bash
 poetry install --no-root --with develop
 ```
+
+Installation of the `pre-commit` hooks is completed with the following instruction.
+
+```bash
+pre-commit install
+```
+
+The `pre-commit` hooks can be run manually at any time with the following instruction.
+
+```bash
+pre-commit run --all-files
+```
+>[!NOTE]
+>This repository enforces a consistent code style with `ruff` through `pre-commit` hooks and `github` actions. The rules `ruff` applies are detailed in the `tool.ruff.lint` section of the `pyroject.toml`.
 
 ## Usage
 
