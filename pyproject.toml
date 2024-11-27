@@ -15,6 +15,7 @@ torch = "^2.5.1"
 torchaudio = "^2.5.1"
 torchvision = "^0.20.1"
 xarray = "^2024.10.0"
+dask = "^2024.11.2"
 
 [tool.poetry.group.develop]
 optional = true
