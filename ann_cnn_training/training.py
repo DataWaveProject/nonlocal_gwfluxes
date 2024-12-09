@@ -24,7 +24,7 @@ from collections import OrderedDict
 import pandas as pd
 
 from dataloader_definition import Dataset_ANN_CNN
-from model_definition import ANN_CNN
+from model_definition import ANN_CNN, ANN_CNN10
 from function_training import Training_ANN_CNN
 
 torch.set_printoptions(edgeitems=2)
@@ -49,6 +49,7 @@ device = torch.device(
 restart = False
 init_epoch = 1  # where to resume. Should have checkpoint saved for init_epoch-1. 1 for fresh runs.
 nepochs = 100
+ablation=True
 # ----------------------
 domain = sys.argv[1]  # global' # 'regional'
 vertical = sys.argv[2]  #'global' # or 'stratosphere_only' or 'stratosphere_update'
@@ -67,7 +68,10 @@ else:
     bs_test = bs_train
 dropout = 0.1
 
-log_filename = f"./ann_cnns_{stencil}x{stencil}_{domain}_{vertical}_{features}_epoch_{init_epoch}_to_{init_epoch+nepochs-1}.txt"
+if not ablation:
+    log_filename = f"./ann_cnns_{stencil}x{stencil}_{domain}_{vertical}_{features}_epoch_{init_epoch}_to_{init_epoch+nepochs-1}.txt"
+else:
+    log_filename = f"./ann_cnns_{stencil}x{stencil}_{domain}_{vertical}_{features}_epoch_{init_epoch}_to_{init_epoch+nepochs-1}_ABLATION_10hiddenlayers.txt"
 
 
 def write_log(*args):
@@ -150,7 +154,10 @@ odim = trainset.odim
 hdim = 4 * idim
 write_log(f"Input dim: {idim}, hidden dim: {hdim}, output dim: {odim}")
 
-model = ANN_CNN(idim=idim, odim=odim, hdim=hdim, dropout=dropout, stencil=trainset.stencil)
+if not ablation:
+    model = ANN_CNN(idim=idim, odim=odim, hdim=hdim, dropout=dropout, stencil=trainset.stencil)
+else:
+    model = ANN_CNN10(idim=idim, odim=odim, hdim=hdim, dropout=dropout, stencil=trainset.stencil)
 model = model.to(device)
 optimizer = optim.Adam(model.parameters(), lr=1e-4)
 scheduler = torch.optim.lr_scheduler.CyclicLR(
@@ -171,7 +178,11 @@ fac = torch.ones(122)  # torch.from_numpy(rho[15:]**0.1)
 fac = (1.0 / fac).to(torch.float32)
 fac = fac.to(device)
 
-file_prefix = f"/scratch/users/ag4680/torch_saved_models/JAMES/{vertical}/ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}_"
+if not ablation:
+    file_prefix = f"/scratch/users/ag4680/torch_saved_models/JAMES/{vertical}/ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}_"
+else:
+    file_prefix = f"/scratch/users/ag4680/torch_saved_models/JAMES/{vertical}/ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}_ABLATION_10hiddenlayers_"
+
 if restart:
     # load checkpoint before resuming training
     PATH = f"{file_prefix}_train_epoch{init_epoch-1}.pt"
