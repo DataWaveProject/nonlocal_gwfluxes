@@ -28,6 +28,9 @@ def Training_ANN_CNN(
     LOSS_TRAIN = np.zeros((nepochs))
     LOSS_TEST = np.zeros((nepochs))
 
+    log = open(log_filename, "a")
+    print(f"In training loop ...", file=log)
+    print("In training loop ...")
     for epoch in np.arange(init_epoch + 0, init_epoch + nepochs):
         # --------- training ----------
         model.train()
@@ -92,7 +95,9 @@ def Training_ANN_CNN(
             f"Epoch {epoch}, {(epoch-init_epoch+1)}/{nepochs}, training mseloss: {LOSS_TRAIN[epoch-1-init_epoch]:.6f}, testing mseloss: {LOSS_TEST[epoch-1-init_epoch]:.6f}",
             file=log,
         )
-
+        print(
+            f"Epoch {epoch}, {(epoch-init_epoch+1)}/{nepochs}, training mseloss: {LOSS_TRAIN[epoch-1-init_epoch]:.6f}, testing mseloss: {LOSS_TEST[epoch-1-init_epoch]:.6f}"
+        )
         # Saving the model at any given epoch
         if save:
             savepath = f"{file_prefix}_train_epoch{epoch}.pt"
