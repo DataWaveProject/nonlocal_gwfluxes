@@ -62,6 +62,9 @@ else:  # lower for the troposphere
 dropout = 0.05  # dropout probability
 
 
+idir = sys.argv[3]
+odir = sys.argv[4]
+
 log_filename = f"./attnunet_{domain}_{vertical}_{features}_smalldropout_epoch_{init_epoch}_to_{init_epoch+nepochs-1}.txt"
 
 
@@ -84,9 +87,9 @@ write_log(
 
 
 if vertical == "stratosphere_only":
-    pre = "/scratch/users/ag4680/training_data/era5/stratosphere_1x1_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_"
+    pre = idir + f"stratosphere_1x1_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_"
 elif vertical == "global" or vertical == "stratosphere_update":
-    pre = "/scratch/users/ag4680/training_data/era5/1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_"
+    pre = idir + f"1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_"
 
 train_files = []
 train_years = np.array([2010, 2012, 2014])
@@ -153,7 +156,7 @@ scheduler = torch.optim.lr_scheduler.CyclicLR(
 loss_fn = nn.MSELoss()
 
 
-file_prefix = f"/scratch/users/ag4680/torch_saved_models/attention_unet/attnunet_era5_{domain}_{vertical}_{features}_mseloss"
+file_prefix = odir + f"attention_unet/attnunet_era5_{domain}_{vertical}_{features}_mseloss"
 if restart:
     PATH = f"{file_prefix}_train_epoch{init_epoch-1}.pt"
     checkpoint = torch.load(PATH)
