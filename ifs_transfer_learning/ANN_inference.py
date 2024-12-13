@@ -11,6 +11,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+# -----------------------------------------------------------
+import logging
+import argparse
+
 # -------- for data parallelism ----------
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.distributed as dist
@@ -45,22 +49,14 @@ else:
 pref = "/scratch/users/ag4680/torch_saved_models/transfer_learning_IFS/ann_cnn/"
 ckpt = f"TLIFS_ann_cnn_{stencil}x{stencil}_era5_ifs_{domain}_{vertical}_{features}_mseloss_train_epoch{str(epoch).zfill(2)}.pt"
 
-
 log_filename = f"./TLIFS_inference_ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_{features}_ckpt_epoch_{epoch}.txt"
-
-
-# log_filename=f"./icml_train_ann-cnn_1x1_global_4hl_dropout0p1_hdim-2idim_restart_epoch_{init_epoch}_to_{init_epoch+nepochs-1}.txt"
-def write_log(*args):
-    line = " ".join([str(a) for a in args])
-    log_file = open(log_filename, "a")
-    log_file.write(line + "\n")
-    log_file.close()
-    print(line)
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename=log_filename, level=logging.INFO)
 
 
 if device != "cpu":
     ngpus = torch.cuda.device_count()
-    write_log(f"NGPUS = {ngpus}")
+    logger.info(f"NGPUS = {ngpus}")
 
 # Define test files
 # --------- To test on one year of ERA5 data
@@ -68,7 +64,7 @@ if teston == "ERA5":
     test_files = []
     test_years = np.array([2015])
     test_month = int(sys.argv[5])  # np.arange(1,13)
-    write_log(f"Inference for month {test_month}")
+    logger.info(f"Inference for month {test_month}")
     if vertical == "stratosphere_only":
         if stencil == 1:
             pre = f"/scratch/users/ag4680/training_data/era5/stratosphere_{stencil}x{stencil}_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_"
@@ -95,10 +91,10 @@ elif teston == "IFS":
             f"/scratch/users/ag4680/coarsegrained_ifs_gwmf_helmholtz/NDJF/troposphere_and_stratosphere_{stencil}x{stencil}_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_constant_mu_sigma_scaling.nc"
         ]
 
-write_log(
+logger.info(
     f"Inference the ANN_CNN model on {domain} horizontal and {vertical} vertical model, with features {features} and dropout={dropout}."
 )
-write_log(f"Test files = {test_files}")
+logger.info(f"Test files = {test_files}")
 
 # initialize dataloader
 testset = Dataset_ANN_CNN(
@@ -121,7 +117,7 @@ hdim = 4 * idim
 # ---- define model
 model = ANN_CNN(idim=idim, odim=odim, hdim=hdim, stencil=stencil, dropout=dropout)
 loss_fn = nn.MSELoss()
-write_log(
+logger.info(
     f"Model created. \n --- model size: {model.totalsize():.2f} MBs,\n --- Num params: {model.totalparams()/10**6:.3f} mil. "
 )
 # ---- load model
@@ -143,19 +139,19 @@ else:
         out = f"/scratch/users/ag4680/gw_inference_ncfiles/TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON_testedonERA5_{sys.argv[7]}.nc"
     else:
         out = f"/scratch/users/ag4680/gw_inference_ncfiles/TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON_testedonIFS_{sys.argv[6]}.nc"
-write_log(f"Output NC file: {out}")
+logger.info(f"Output NC file: {out}")
 
 # better to create the file within the inference_and_save function
-write_log("Initiating inference")
+logger.info("Initiating inference")
 Inference_and_Save_ANN_CNN(
     model=model,
     testset=testset,
     testloader=testloader,
     bs_test=bs_test,
     device=device,
-    log_filename=log_filename,
+    logger=logger,
     outfile=out,
     stencil=stencil,
 )
 
-write_log("Inference complete")
+logger.info("Inference complete")

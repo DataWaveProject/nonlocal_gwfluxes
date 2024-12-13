@@ -8,19 +8,15 @@
 import sys
 import math
 import numpy as np
-
-# from matplotlib import pyplot as plt
-# from netCDF4 import Dataset
-# import pygrib as pg
 from time import time as time2
 import xarray as xr
-# import dask
-# from files import train_files, test_files
-
-# %matplotlib inline
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+# -----------------------------------------------------------
+import logging
+import argparse
 
 # ------------ for data parallelism --------------------------
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -30,8 +26,6 @@ import torch.multiprocessing as mp
 # ------------------------------------------------------------
 import torch.optim as optim
 
-# from torch.utils.data import DataLoader, random_split
-# from torch.utils.data import Dataset as TensorDataset
 from collections import OrderedDict
 import pandas as pd
 
@@ -43,21 +37,9 @@ from function_training import (
     Training_AttentionUNet_TransferLearning,
     Model_Freeze_Transfer_Learning,
 )
-# from files import train_files, test_files
 
 torch.set_printoptions(edgeitems=2)
 torch.manual_seed(123)
-
-f = "/home/users/ag4680/myjupyter/137levs_ak_bk.npz"
-data = np.load(f, mmap_mode="r")
-
-lev = data["lev"]
-ht = data["ht"]
-ak = data["ak"]
-bk = data["bk"]
-R = 287.05
-T = 250
-rho = 100 * lev / (R * T)
 
 
 # https://stackoverflow.com/questions/54216920/how-to-use-multiple-gpus-in-pytorch
@@ -110,26 +92,20 @@ elif vertical == "stratosphere_only":
         log_filename = f"./IFStransfer_{vertical}_ann_cnn_{stencil}x{stencil}_{features}_6hl_epoch_{init_epoch}_to_{init_epoch+nepochs-1}.txt"
     elif model_type == "attention":
         log_filename = f"./IFStransfer_{vertical}_attention_{features}_epoch_{init_epoch}_to_{init_epoch+nepochs-1}.txt"
-
-
-def write_log(*args):
-    line = " ".join([str(a) for a in args])
-    log_file = open(log_filename, "a")
-    log_file.write(line + "\n")
-    log_file.close()
-    print(line)
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename=log_filename, level=logging.INFO)
 
 
 if device != "cpu":
     ngpus = torch.cuda.device_count()
-    write_log(f"NGPUS = {ngpus}")
+    logger.info(f"NGPUS = {ngpus}")
 
 if model_type == "ann":
-    write_log(
+    logger.info(
         f"Transfer learning: retraining ERA5 trained ANN-CNNs with stencil {stencil}x{stencil}, vertical={vertical}, horizontal={domain} model with features {features}. CyclicLR scheduler to cycle learning rates between lr_min={lr_min} to lr_max={lr_max}."
     )
 elif model_type == "attention":
-    write_log(
+    logger.info(
         f"Transfer learning: retraining ERA5 trained {model_type}, vertical={vertical}, horizontal={domain} model with features {features}. CyclicLR scheduler to cycle learning rates between lr_min={lr_min} to lr_max={lr_max}."
     )
 
@@ -140,7 +116,7 @@ if vertical == "global" or vertical == "stratosphere_update":
     f = f"/scratch/users/ag4680/coarsegrained_ifs_gwmf_helmholtz/NDJF/troposphere_and_stratosphere_{stencil}x{stencil}_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_constant_mu_sigma_scaling.nc"
 elif vertical == "stratosphere_only":
     f = f"/scratch/users/ag4680/coarsegrained_ifs_gwmf_helmholtz/NDJF/stratosphere_only_{stencil}x{stencil}_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_constant_mu_sigma_scaling.nc"
-write_log(f"File name: {f}")
+logger.info(f"File name: {f}")
 train_files = [f]
 test_files = [f]
 
@@ -160,15 +136,15 @@ if model_type == "ann":
 elif model_type == "attention":
     bs_train = 80
     bs_test = 80
-write_log(f"train batch size = {bs_train}")
-write_log(f"validation batch size = {bs_test}")
+logger.info(f"train batch size = {bs_train}")
+logger.info(f"validation batch size = {bs_test}")
 
 # ============================= 1x1 ===========================
 tstart = time2()
 # IF REGIONAL, SPECIFY THE REGION AS WELL
 # 1andes, 2scand, 3himalaya, 4newfound, 5south_ocn, 6se_asia, 7natlantic, 8npacific
 rgn = "1andes"
-write_log(f"Region: {rgn}")
+logger.info(f"Region: {rgn}")
 # shuffle=False leads to much faster reading! Since 3x3 and 5x5 is slow, set this to False
 
 # Since not a lot of IFS data, opting for no validation set
@@ -198,7 +174,7 @@ if model_type == "ann":
     idim = trainset.idim
     odim = trainset.odim
     hdim = 4 * idim
-    write_log(f"Input dim: {idim}, hidden dim: {hdim}, output dim: {odim}")
+    logger.info(f"Input dim: {idim}, hidden dim: {hdim}, output dim: {odim}")
 
 elif model_type == "attention":
     trainset = Dataset_AttentionUNet(
@@ -224,7 +200,7 @@ elif model_type == "attention":
     print(odim)
 
 
-write_log(f"Loading model checkpoint from {PATH}")
+logger.info(f"Loading model checkpoint from {PATH}")
 # lr 10-6 to 10-4 over 100 up and 100 down steps works well waise
 # Important note: The optimizer is loaded on to the same device at the model. So best to first define the model and port to the GPU, and then define the optimizer.
 # Otherwise, will have to port both the model and optimizer onto the device at the end, to prevent device mismatch error
@@ -295,12 +271,12 @@ model = Model_Freeze_Transfer_Learning(model=model, model_type=model_type)
 
 
 for params in model.parameters():
-    write_log(f"{params.requires_grad}")
+    logger.info(f"{params.requires_grad}")
 
-write_log(
+logger.info(
     f"model loaded \n --- model size: {model.totalsize():.2f} MBs,\n --- Num params: {model.totalparams()/10**6:.3f} mil. "
 )
-write_log("Model checkpoint loaded and prepared for re-training")
+logger.info("Model checkpoint loaded and prepared for re-training")
 
 
 # Set final weights names
@@ -311,7 +287,7 @@ elif model_type == "attention":
 
 # might not need to restart - so haven't added that part here. If needed, borrow it from other files
 
-write_log("Re-Training final two layers...")
+logger.info("Re-Training final two layers...")
 if model_type == "ann":
     model, loss_train = Training_ANN_CNN_TransferLearning(
         nepochs=nepochs,
@@ -328,7 +304,7 @@ if model_type == "ann":
         file_prefix=file_prefix,
         scheduler=scheduler,
         device=device,
-        log_filename=log_filename,
+        logger=logger,
     )
 elif model_type == "attention":
     model, loss_train = Training_AttentionUNet_TransferLearning(
@@ -345,7 +321,7 @@ elif model_type == "attention":
         file_prefix=file_prefix,
         scheduler=scheduler,
         device=device,
-        log_filename=log_filename,
+        logger=logger,
     )
 
-write_log("Training complete.")
+logger.info("Training complete.")
