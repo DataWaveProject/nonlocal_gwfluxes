@@ -10,6 +10,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+# -----------------------------------------------------------
+import logging
+import argparse
+
 # -------- for data parallelism ----------
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.distributed as dist
@@ -50,19 +54,12 @@ ckpt = f"ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_
 log_filename = (
     f"./inference_ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_{features}_ckpt_epoch_{epoch}.txt"
 )
-
-
-def write_log(*args):
-    line = " ".join([str(a) for a in args])
-    log_file = open(log_filename, "a")
-    log_file.write(line + "\n")
-    log_file.close()
-    print(line)
-
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename=log_filename, level=logging.INFO)
 
 if device != "cpu":
     ngpus = torch.cuda.device_count()
-    write_log(f"NGPUS = {ngpus}")
+    logger.info(f"NGPUS = {ngpus}")
 
 
 # Define test files
@@ -70,7 +67,7 @@ if device != "cpu":
 test_files = []
 test_years = np.array([2015])
 test_month = int(sys.argv[5])  # np.arange(1,13)
-write_log(f"Inference for month {test_month}")
+logger.info(f"Inference for month {test_month}")
 if vertical == "stratosphere_only":
     if stencil == 1:
         pre = "/scratch/users/ag4680/training_data/era5/stratosphere_1x1_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_"
@@ -98,10 +95,10 @@ elif vertical == "global" or vertical == "stratosphere_update":
         f"/scratch/users/ag4680/coarsegrained_ifs_gwmf_helmholtz/NDJF/troposphere_and_stratosphere_{stencil}x{stencil}_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_constant_mu_sigma_scaling.nc"
     ]
 
-write_log(
+logger.info(
     f"Inference the ANN_CNN model on {domain} horizontal and {vertical} vertical model, with features {features} and dropout={dropout}."
 )
-write_log(f"Test files = {test_files}")
+logger.info(f"Test files = {test_files}")
 
 # initialize dataloader
 testset = Dataset_ANN_CNN(
@@ -123,7 +120,7 @@ hdim = 4 * idim  # earlier runs has 2*dim for 5x5 stencil. Stick to 4*dim this t
 # ---- define model
 model = ANN_CNN(idim=idim, odim=odim, hdim=hdim, dropout=dropout, stencil=stencil)
 loss_fn = nn.MSELoss()
-write_log(
+logger.info(
     f"Model created. \n --- model size: {model.totalsize():.2f} MBs,\n --- Num params: {model.totalparams()/10**6:.3f} mil. "
 )
 # ---- load model
@@ -141,10 +138,10 @@ if dropout == 0:
     out = f"/scratch/users/ag4680/gw_inference_ncfiles/inference_{S[0]}_testedonIFS.nc"
 else:
     out = f"/scratch/users/ag4680/gw_inference_ncfiles/inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON_{sys.argv[7]}.nc"  # argv: ensemble number
-write_log(f"Output NC file: {out}")
+logger.info(f"Output NC file: {out}")
 
 # better to create the file within the inference_and_save function
-write_log("Initiating inference")
-Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, stencil, log_filename, out)
+logger.info("Initiating inference")
+Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, stencil, logger, out)
 
-write_log("Inference complete")
+logger.info("Inference complete")

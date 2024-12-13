@@ -20,7 +20,7 @@ def Training_ANN_CNN(
     save,
     file_prefix,
     device,
-    log_filename,
+    logger,
     init_epoch=1,
     scheduler=0,
 ):
@@ -28,9 +28,8 @@ def Training_ANN_CNN(
     LOSS_TRAIN = np.zeros((nepochs))
     LOSS_TEST = np.zeros((nepochs))
 
-    log = open(log_filename, "a")
-    print(f"In training loop ...", file=log)
-    print("In training loop ...")
+    logger.info(f"In training loop ...", file=log)
+    logger.info("In training loop ...")
     for epoch in np.arange(init_epoch + 0, init_epoch + nepochs):
         # --------- training ----------
         model.train()
@@ -90,12 +89,10 @@ def Training_ANN_CNN(
 
         LOSS_TEST[epoch - 1 - init_epoch] = testloss / count
 
-        log = open(log_filename, "a")
-        print(
-            f"Epoch {epoch}, {(epoch-init_epoch+1)}/{nepochs}, training mseloss: {LOSS_TRAIN[epoch-1-init_epoch]:.6f}, testing mseloss: {LOSS_TEST[epoch-1-init_epoch]:.6f}",
-            file=log,
+        logger.info(
+            f"Epoch {epoch}, {(epoch-init_epoch+1)}/{nepochs}, training mseloss: {LOSS_TRAIN[epoch-1-init_epoch]:.6f}, testing mseloss: {LOSS_TEST[epoch-1-init_epoch]:.6f}"
         )
-        print(
+        logger.info(
             f"Epoch {epoch}, {(epoch-init_epoch+1)}/{nepochs}, training mseloss: {LOSS_TRAIN[epoch-1-init_epoch]:.6f}, testing mseloss: {LOSS_TEST[epoch-1-init_epoch]:.6f}"
         )
         # Saving the model at any given epoch
@@ -119,7 +116,7 @@ def Training_ANN_CNN(
 
 
 def Inference_and_Save_ANN_CNN(
-    model, testset, testloader, bs_test, device, stencil, log_filename, outfile
+    model, testset, testloader, bs_test, device, stencil, logger, outfile
 ):
     # ---------------------------------------------------------------------------------------
     idim = testset.idim
@@ -199,8 +196,7 @@ def Inference_and_Save_ANN_CNN(
         # print(f'S[0]:{S[0]}, S[0]/(nx*ny) = {S[0]/(nx*ny)}')
         nt = int(S[0] / (nx * ny))
         if count == 0:
-            log = open(log_filename, "a")
-            print(f"Minibatch={i}, count={count}, output shape={S}", file=log)
+            logger.info(f"Minibatch={i}, count={count}, output shape={S}")
 
         # print(f'OUT.shape = {OUT.shape}')
         # print(f'PRED.shape = {PRED.shape}')
@@ -228,9 +224,7 @@ def Inference_and_Save_ANN_CNN(
     out.close()
 
 
-def Inference_and_Save_AttentionUNet(
-    model, testset, testloader, bs_test, device, log_filename, outfile
-):
+def Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device, logger, outfile):
     # ---------------------------------------------------------------------------------------
     idim = testset.idim
     odim = testset.odim
@@ -287,8 +281,6 @@ def Inference_and_Save_AttentionUNet(
 
     model.eval()
     model.dropout.train()  # this enables dropout during inference. By default dropout is OFF when model.eval()=True
-    log = open(log_filename, "a")
-    # print(f'model dropout after: {}', file=log)
     count = 0
     for i, (INP, OUT) in enumerate(testloader):
         # print([i,count])
@@ -300,8 +292,7 @@ def Inference_and_Save_AttentionUNet(
         OUT = OUT.to(device)
         S = OUT.shape
         if count == 0:
-            log = open(log_filename, "a")
-            print(f"Minibatch={i}, count={count}, output shape={S}", file=log)
+            logger.info(f"Minibatch={i}, count={count}, output shape={S}")
         PRED = model(INP)
         # write to netCDF
         if device != "cpu":

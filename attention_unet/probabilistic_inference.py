@@ -10,6 +10,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+# -----------------------------------------------------------
+import logging
+import argparse
+
 # -------- for data parallelism ----------
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.distributed as dist
@@ -39,26 +43,19 @@ ckpt = f"attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{str(ep
 
 
 log_filename = f"./inference_attnunet_{domain}_{vertical}_{features}_ckpt_epoch_{epoch}.txt"
-
-
-# log_filename=f"./icml_train_ann-cnn_1x1_global_4hl_dropout0p1_hdim-2idim_restart_epoch_{init_epoch}_to_{init_epoch+nepochs-1}.txt"
-def write_log(*args):
-    line = " ".join([str(a) for a in args])
-    log_file = open(log_filename, "a")
-    log_file.write(line + "\n")
-    log_file.close()
-    print(line)
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename=log_filename, level=logging.INFO)
 
 
 if device != "cpu":
     ngpus = torch.cuda.device_count()
-    write_log(f"NGPUS = {ngpus}")
+    logger.info(f"NGPUS = {ngpus}")
 
 # Define test files
 test_files = []
 test_years = np.array([2015])
 test_month = int(sys.argv[4])  # np.arange(1,13)
-write_log(f"Inference for month {test_month}")
+logger.info(f"Inference for month {test_month}")
 if vertical == "stratosphere_only":
     pre = "/scratch/users/ag4680/training_data/era5/stratosphere_1x1_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_"
 elif vertical == "global":
@@ -66,7 +63,7 @@ elif vertical == "global":
 for year in test_years:
     for months in np.arange(test_month, test_month + 1):
         test_files.append(f"{pre}{year}_constant_mu_sigma_scaling{str(months).zfill(2)}.nc")
-write_log(
+logger.info(
     f"Inference the Attention UNet model on {domain} horizontal and {vertical} vertical model, with features {features} and dropout={dropout}."
 )
 
@@ -85,7 +82,7 @@ ch_out = testset.odim
 # ---- define model
 model = Attention_UNet(ch_in=ch_in, ch_out=ch_out, dropout=dropout)
 loss_fn = nn.MSELoss()
-write_log(
+logger.info(
     f"Model created. \n --- model size: {model.totalsize():.2f} MBs,\n --- Num params: {model.totalparams()/10**6:.3f} mil. "
 )
 # ---- load model
@@ -102,10 +99,10 @@ if dropout == 0:
     out = f"/scratch/users/ag4680/gw_inference_ncfiles/inference_{S[0]}_{test_years[0]}_{test_month}.nc"
 else:
     out = f"/scratch/users/ag4680/gw_inference_ncfiles/inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON_{sys.argv[5]}.nc"
-write_log(f"Output NC file: {out}")
+logger.info(f"Output NC file: {out}")
 
 # better to create the file within the inference_and_save function
-write_log("Initiating inference")
-inference_and_save(model, testset, testloader, bs_test, device, log_filename, out)
+logger.info("Initiating inference")
+inference_and_save(model, testset, testloader, bs_test, device, logger, out)
 
-write_log("Inference complete")
+logger.info("Inference complete")
