@@ -35,11 +35,15 @@ torch.manual_seed(123)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+# argument parser
+parser = argparse.ArgumentParser()
+
+
 # PARAMETERS AND HYPERPARAMETERS
 restart = False
 init_epoch = 1  # where to resume. Should have checkpoint saved for init_epoch-1. 1 for fresh runs.
 nepochs = 100
-ablation = True
+ablation = False
 # ----------------------
 domain = sys.argv[1]  # global' # 'regional'
 vertical = sys.argv[2]  #'global' # or 'stratosphere_only' or 'stratosphere_update'
