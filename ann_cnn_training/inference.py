@@ -25,15 +25,65 @@ from function_training import Inference_and_Save_ANN_CNN
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-d",
+    "--horizontal",
+    choices=["global"],
+    default="global",
+    help="Horizontal domain for training",
+)
+parser.add_argument(
+    "-v",
+    "--vertical",
+    choices=["global", "stratosphere_update"],
+    default="global",
+    help="Vertical domain for training",
+)
+parser.add_argument(
+    "-f",
+    "--features",
+    choices=["uvtheta", "uvw", "uvthetaw"],
+    default="uvtheta",
+    help="Feature set for training",
+)
+parser.add_argument("-e", "--epoch", type=int, default=100, help="Epoch to use for inference")
+parser.add_argument(
+    "-m",
+    "--month",
+    type=int,
+    choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    default=1,
+    help="Month to run inference on",
+)
+parser.add_argument(
+    "-s", "--stencil", type=int, choices=[1, 3, 5], default=1, help="Horizontal stencil for the NN"
+)
+parser.add_argument(
+    "-i", "--input_dir", default=".", help="Input directory to fetch validation data"
+)
+parser.add_argument("-c", "--ckpt_dir", default=".", help="Checkpoint directory")
+parser.add_argument("-o", "--output_dir", default=".", help="Output directory to save outputs")
+args = parser.parse_args()
+
+# print parsed args
+print(f"horizontal={args.horizontal}")
+print(f"vertical={args.vertical}")
+print(f"features={args.features}")
+print(f"epoch={args.epoch}")
+print(f"month={args.month}")
+print(f"stencil={args.stencil}")
+print(f"checkpoint_dir={args.ckpt_dir}")
+print(f"input_dir={args.input_dir}")
+print(f"output_dir={args.output_dir}")
+
 # --------------------------------------------------
-domain = sys.argv[1]  # 'regional'
-vertical = sys.argv[2]  #'stratosphere_only' # 'global'
-features = sys.argv[
-    3
-]  #'uvthetaw' # 'uvtheta', ''uvthetaw', or 'uvw' for troposphere | additionally 'uvthetaN2' and 'uvthetawN2' for stratosphere_only
+domain = args.horizontal  # sys.argv[1]  # 'regional'
+vertical = args.vertical  # sys.argv[2]  #'stratosphere_only' # 'global'
+features = args.features  #'uvthetaw' # 'uvtheta', ''uvthetaw', or 'uvw' for troposphere | additionally 'uvthetaN2' and 'uvthetawN2' for stratosphere_only
 dropout = 0  # can choose this to be non-zero during inference for uncertainty quantification. A little dropout could go a long way. Choose a small value - 0.03ish?
-epoch = int(sys.argv[4])
-stencil = int(sys.argv[6])
+epoch = args.epoch  # int(sys.argv[4])
+stencil = args.stencil  # int(sys.argv[6])
 
 if stencil == 1:
     bs_train = 20
@@ -43,7 +93,7 @@ else:
     bs_test = bs_train
 
 # model checkpoint
-pref = f"/scratch/users/ag4680/torch_saved_models/JAMES/{vertical}/"
+pref = args.ckpt_dir  # f"/scratch/users/ag4680/torch_saved_models/JAMES/{vertical}/"
 ckpt = f"ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{epoch}.pt"
 
 log_filename = (
@@ -61,18 +111,27 @@ if device != "cpu":
 # ------- To test on one year of ERA5 data
 test_files = []
 test_years = np.array([2015])
-test_month = int(sys.argv[5])  # np.arange(1,13)
+test_month = args.month  # int(sys.argv[5])  # np.arange(1,13)
 logger.info(f"Inference for month {test_month}")
 if vertical == "stratosphere_only":
     if stencil == 1:
-        pre = "/scratch/users/ag4680/training_data/era5/stratosphere_1x1_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_"
+        pre = (
+            args.input_dir
+            + f"stratosphere_1x1_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_"
+        )
     else:
-        pre = f"/scratch/users/ag4680/training_data/era5/stratosphere_nonlocal_{stencil}x{stencil}_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_"
+        pre = (
+            args.input_dir
+            + f"stratosphere_nonlocal_{stencil}x{stencil}_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_"
+        )
 elif vertical == "global" or vertical == "stratosphere_update":
     if stencil == 1:
-        pre = "/scratch/users/ag4680/training_data/era5/1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_"
+        pre = args.input_dir + f"1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_"
     else:
-        pre = f"/scratch/users/ag4680/training_data/era5/nonlocal_{stencil}x{stencil}_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_"
+        pre = (
+            args.input_dir
+            + f"nonlocal_{stencil}x{stencil}_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_"
+        )
 
 for year in test_years:
     for months in np.arange(test_month, test_month + 1):
@@ -125,10 +184,10 @@ model.eval()
 # create netCDF file
 S = ckpt.split(".")
 if dropout == 0:
-    out = f"/scratch/users/ag4680/gw_inference_ncfiles/inference_{S[0]}_{test_years[0]}_{test_month}.nc"
+    out = args.output_dir + f"inference_{S[0]}_{test_years[0]}_{test_month}.nc"
     # out=f'/scratch/users/ag4680/gw_inference_ncfiles/inference_{S[0]}_testedonIFS.nc'
 else:
-    out = f"/scratch/users/ag4680/gw_inference_ncfiles/inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON_{sys.argv[7]}.nc"
+    out = args.output_dir + f"inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON.nc"
 logger.info(f"Output NC file: {out}")
 
 # better to create the file within the inference_and_save function

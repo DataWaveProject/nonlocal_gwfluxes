@@ -37,6 +37,40 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # argument parser
 parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-d",
+    "--horizontal",
+    choices=["global"],
+    default="global",
+    help="Horizontal domain for training",
+)
+parser.add_argument(
+    "-v",
+    "--vertical",
+    choices=["global", "stratosphere_update"],
+    default="global",
+    help="Vertical domain for training",
+)
+parser.add_argument(
+    "-f",
+    "--features",
+    choices=["uvtheta", "uvw", "uvthetaw"],
+    default="uvtheta",
+    help="Feature set for training",
+)
+parser.add_argument(
+    "-s", "--stencil", type=int, choices=[1, 3, 5], default=1, help="Horizontal stencil for the NN"
+)
+parser.add_argument("-i", "--input_dir", default=".", help="Input directory with training data")
+parser.add_argument("-o", "--output_dir", default=".", help="Output directory to store checkpoints")
+args = parser.parse_args()
+# print parsed args
+print(f"horizontal={args.horizontal}")
+print(f"vertical={args.vertical}")
+print(f"features={args.features}")
+print(f"stencil={args.stencil}")
+print(f"input_dir={args.input_dir}")
+print(f"output_dir={args.output_dir}")
 
 
 # PARAMETERS AND HYPERPARAMETERS
@@ -45,11 +79,11 @@ init_epoch = 1  # where to resume. Should have checkpoint saved for init_epoch-1
 nepochs = 100
 ablation = False
 # ----------------------
-domain = sys.argv[1]  # global' # 'regional'
-vertical = sys.argv[2]  #'global' # or 'stratosphere_only' or 'stratosphere_update'
+domain = args.horizontal  # global' # 'regional'
+vertical = args.vertical  #'global' # or 'stratosphere_only' or 'stratosphere_update'
 # ----------------------
-features = sys.argv[3]  #'uvtheta'
-stencil = int(sys.argv[4])  # stencil size
+features = args.features  #'uvtheta'
+stencil = args.stencil  # stencil size
 # ----------------------
 lr_min = 1e-4
 lr_max = 5e-4
@@ -81,8 +115,8 @@ logger.info(
     f"Training the {stencil}x{stencil} ANN-CNNs, {domain} horizontal and {vertical} vertical model with features {features} with min-max learning rates {lr_min} to {lr_max} for a CyclicLR, and dropout={dropout}.\n"
 )
 
-idir = sys.argv[5]
-odir = sys.argv[6]
+idir = args.input_dir  # sys.argv[5]
+odir = args.output_dir  # sys.argv[6]
 
 if vertical == "stratosphere_only":
     if stencil == 1:

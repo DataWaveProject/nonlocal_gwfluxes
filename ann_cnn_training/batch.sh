@@ -22,7 +22,13 @@ source ~/nonlocal_gwfluxes/.nlgw/bin/activate
 # TRAINING
 stencil=3
 # Usage: python training.py <domain> <vertical> <features> <stencil> <input_file_dir> <torch_model_dir>
-python training.py global stratosphere_update uvw $stencil /glade/derecho/scratch/agupta/era5_training_data/ /glade/derecho/scratch/agupta/torch_saved_models/ 
+python training.py \
+	-d global  \
+	-v stratosphere_update \
+	-f uvw \
+	-s $stencil  \
+	-i /glade/derecho/scratch/agupta/era5_training_data/ \
+	-o /glade/derecho/scratch/agupta/torch_saved_models/ 
 
 # INFERENCE
 # Usage: python inference.py <domain> <vertical> <features> <epoch_no> <month> <stencil>
@@ -32,6 +38,18 @@ python training.py global stratosphere_update uvw $stencil /glade/derecho/scratc
 #	python inference.py global stratosphere_update uvw 100 $month 1
 #	python inference.py global stratosphere_update uvtheta 68 $month 3
 #done
+
+#python inference.py \
+#	-d global \
+#	-v stratosphere_update \
+#	-f uvtheta \
+#	-e 100 \
+#	-m $month \ 
+#	-s 1 \
+#	-i /glade/derecho/scratch/agupta/era5_training_data/ \
+#	-c /glade/derecho/scratch/agupta/torch_saved_models/ \
+#	-o /glade/derecho/scratch/agupta/gw_inference_files/
+
 
 #python inference_ifs.py global stratosphere_update uvtheta 100 12 1
 #python inference_ifs.py global stratosphere_update uvw 100 12 1
