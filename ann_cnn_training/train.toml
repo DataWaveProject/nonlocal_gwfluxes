@@ -1,0 +1,15 @@
+# TOML document containing basic config options for training
+
+title = "training configuration"
+
+[options]
+restart = false
+init_epoch = 1
+nepochs = 100
+
+[torch]
+manual_seed = 123
+
+[hyperparameters]
+lr_min = 1e-4
+lr_max = 5e-4
