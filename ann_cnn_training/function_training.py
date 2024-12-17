@@ -28,7 +28,7 @@ def Training_ANN_CNN(
     LOSS_TRAIN = np.zeros((nepochs))
     LOSS_TEST = np.zeros((nepochs))
 
-    logger.info(f"In training loop ...", file=log)
+    logger.info(f"In training loop ...")
     logger.info("In training loop ...")
     for epoch in np.arange(init_epoch + 0, init_epoch + nepochs):
         # --------- training ----------

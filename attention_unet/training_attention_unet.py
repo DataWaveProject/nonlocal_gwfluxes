@@ -24,7 +24,43 @@ from model_attention_unet import Attention_UNet
 from function_training import Training_AttentionUNet
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(device)
+
+
+# argument parser
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-d",
+    "--horizontal",
+    choices=["global"],
+    default="global",
+    help="Horizontal domain for training",
+)
+parser.add_argument(
+    "-v",
+    "--vertical",
+    choices=["global", "stratosphere_update"],
+    default="global",
+    help="Vertical domain for training",
+)
+parser.add_argument(
+    "-f",
+    "--features",
+    choices=["uvtheta", "uvw", "uvthetaw"],
+    default="uvtheta",
+    help="Feature set for training",
+)
+parser.add_argument(
+    "-i", "--input_dir", default=".", help="Input directory to fetch validation data"
+)
+parser.add_argument("-o", "--output_dir", default=".", help="Output directory to save outputs")
+args = parser.parse_args()
+# print parsed args
+print(f"horizontal={args.horizontal}")
+print(f"vertical={args.vertical}")
+print(f"features={args.features}")
+print(f"input_dir={args.input_dir}")
+print(f"output_dir={args.output_dir}")
+
 
 # ------------------------------------------------------------------------------
 
@@ -40,11 +76,9 @@ bs_train = 40  # 80 (80 works for most). (does not work for global uvthetaw)
 bs_test = bs_train
 
 # --------------------------------------------------
-domain = "global"  # 'regional'
-vertical = sys.argv[1]  #'stratosphere_only' # 'global', # stratosphere_update
-features = sys.argv[
-    2
-]  #'uvthetaw' # 'uvtheta', ''uvthetaw', or 'uvw' for troposphere | additionally 'uvthetaN2' and 'uvthetawN2' for stratosphere_only
+domain = args.horizontal  # "global"  # 'regional'
+vertical = args.vertical  # sys.argv[1]  #'stratosphere_only' # 'global', # stratosphere_update
+features = args.features  # sys.argv[2]  #'uvthetaw' # 'uvtheta', ''uvthetaw', or 'uvw' for troposphere | additionally 'uvthetaN2' and 'uvthetawN2' for stratosphere_only
 # --------------------------------------------------
 if vertical == "stratosphere_only" or vertical == "stratosphere_update":
     lr_min = 1e-4
@@ -55,8 +89,8 @@ else:  # lower for the troposphere
 dropout = 0.05  # dropout probability
 
 
-idir = sys.argv[3]
-odir = sys.argv[4]
+idir = args.input_dir  # sys.argv[3]
+odir = args.output_dir  # sys.argv[4]
 
 log_filename = f"./attnunet_{domain}_{vertical}_{features}_smalldropout_epoch_{init_epoch}_to_{init_epoch+nepochs-1}.txt"
 logger = logging.getLogger(__name__)

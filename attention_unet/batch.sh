@@ -20,9 +20,16 @@ source ~/nonlocal_gwfluxes/.nlgw/bin/activate
 
 # 'global'/'stratosphere_only'/'stratosphere_update' and 'feature_set'
 # TRAINING
-python training_attention_unet.py global uvw /glade/derecho/scratch/agupta/era5_training_data/ /glade/derecho/scratch/agupta/torch_saved_models/
+#python training_attention_unet.py global uvw /glade/derecho/scratch/agupta/era5_training_data/ /glade/derecho/scratch/agupta/torch_saved_models/
 #python training_attention_unet.py stratosphere_only uvthetawN2
 
+
+python training.py \
+        -d global  \
+        -v stratosphere_update \
+        -f uvw \
+        -i /glade/derecho/scratch/agupta/era5_training_data/ \
+        -o /glade/derecho/scratch/agupta/torch_saved_models/
 
 #for month in 1 2 3 4 5 6 7 8 9 10 11 12;
 #do
@@ -37,6 +44,26 @@ python training_attention_unet.py global uvw /glade/derecho/scratch/agupta/era5_
 #	python inference.py stratosphere_update uvw 119 $month
 #done
 
+
+#python inference.py \
+#       -v stratosphere_update \
+#       -f uvw \
+# 	-e 100 \
+# 	-m 1 \
+#       -i /glade/derecho/scratch/agupta/era5_training_data/ \
+#	-c /glade/derecho/scratch/agupta/torch_saved_models/ \
+#       -o /glade/derecho/scratch/agupta/torch_saved_models/
+
+
+#python inference_ifs.py global uvw 150 1
+
+#python inference_ifs.py \
+#       -v stratosphere_update \
+#       -f uvw \
+#       -e 100 \
+#       -i /glade/derecho/scratch/agupta/era5_training_data/ \
+#       -c /glade/derecho/scratch/agupta/torch_saved_models/ \
+#       -o /glade/derecho/scratch/agupta/torch_saved_models/
 
 
 # INFERENCE
