@@ -8,6 +8,8 @@ license = "LICENSE"
 keywords = ["non-local", "gravity waves"]
 
 [tool.poetry.dependencies]
+click= "^8.1.7"
+tomli= "^2.0.1"
 python = "^3.10.0"
 netCDF4 = "^1.7.2"
 numpy = "^1.26.3"
