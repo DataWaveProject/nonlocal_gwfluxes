@@ -1,9 +1,6 @@
-from netCDF4 import Dataset
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
+import xarray as xr
 
 
 def Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, stencil, outfile):
@@ -16,9 +13,10 @@ def Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, sten
     nx = len(lon)
 
     model.eval()
-    model.dropout.train()  # this enables dropout during inference. By default dropout is OFF when model.eval()=True
+    # model.dropout.train()  # this enables dropout during inference. By default dropout is OFF when model.eval()=True
     testloss = 0.0
     count = 0
+    print("hi")
     for i, (INP, OUT) in enumerate(testloader):
         INP = INP.to(device)
         OUT = OUT.to(device)
@@ -34,6 +32,18 @@ def Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, sten
             OUT = OUT.reshape(T[0] * T[1], -1)
         PRED = model(INP)
 
+        print("saving data...")
+        data = {
+            "input": INP,
+            "output": OUT,
+            "predict": PRED,
+        }
+
+        for k, v in data.items():
+            xdata = xr.DataArray(v.detach().cpu().numpy())
+            xdata.to_netcdf(k + ".nc")
+            print(f"{k} = ", v.detach().cpu().numpy())
+
         S = PRED.shape
         nt = int(S[0] / (nx * ny))
 
@@ -43,15 +53,15 @@ def Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, sten
         PRED = PRED.reshape(nt, ny, nx, odim)
         PRED = torch.permute(PRED, (0, 3, 1, 2))
 
-        # write to .npz
-        if device != "cpu":
-            np.savez(
-                outfile,
-                output=OUT[:].detach().cpu().numpy(),
-                prediction=PRED[:].detach().cpu().numpy(),
-            )
-        else:
-            np.savez(outfile, output=OUT[:].numpy(), prediction=PRED[:].numpy())
+        # # write to .npz
+        # if device != "cpu":
+        #     np.savez(
+        #         outfile,
+        #         output=OUT[:].detach().cpu().numpy(),
+        #         prediction=PRED[:].detach().cpu().numpy(),
+        #     )
+        # else:
+        #     np.savez(outfile, output=OUT[:].numpy(), prediction=PRED[:].numpy())
         count += 1
 
 
