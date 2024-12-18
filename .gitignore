@@ -1,4 +1,6 @@
 # not tracking all error and output files
+*.pt
+*.exe
 *.out
 *.err
 *.txt

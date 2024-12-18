@@ -24,42 +24,45 @@ from function_training import Inference_and_Save_ANN_CNN
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 domain = "global"
-vertical = "global"
+vertical = "stratosphere_only"
 features = "uvtheta"
 
-model = "attention"  # or 'ann'
-stencil = 3
-epoch = 94
+model = "ann"  # or 'ann'
+stencil = 1
+epoch = 100
+dropout = 0.1
 
 if model == "attention":
     stencil = 1
 
-bs_test = 2
+bs_test = 1
 
 # assumes ckpts stored in model_ckpt dir
 if model == "attention":
-    PATH = f"model_ckpt/attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{epoch}.pt"
+    PATH = f"model-huggingface/attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{epoch}.pt"
 elif model == "ann" and stencil == 1:
-    PATH = f"model_ckpt/ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{epoch}.pt"
+    PATH = f"model-huggingface/ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{epoch}.pt"
 
 # path to test_files
 if model == "attention":
     test_file = [
-        f"test_files/test_1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_2015_constant_mu_sigma_scaling08.nc"
+        f"test_files/test_1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_2010_constant_mu_sigma_scaling01.nc"
     ]
 elif model == "ann":
     if stencil == 1:
         test_file = [
-            f"test_files/test_1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_2015_constant_mu_sigma_scaling08.nc"
+            f"inputs/stratosphere_1x1_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_2010_constant_mu_sigma_scaling01.nc"
         ]
     elif stencil == 3:
         test_file = [
-            f"test_files/test_nonlocal_3x3_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_2015_constant_mu_sigma_scaling08.nc"
+            f"test_files/test_nonlocal_3x3_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_2010_constant_mu_sigma_scaling01.nc"
         ]
+
+out = "output.npz"
 
 if model == "ann":
     testset = Dataset_ANN_CNN(
-        files=test_files,
+        files=test_file,
         domain=domain,
         vertical=vertical,
         stencil=stencil,
@@ -85,10 +88,11 @@ if model == "ann":
     model.load_state_dict(checkpoint["model_state_dict"])
     model = model.to(device)
     model.eval()
+    Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, stencil, out)
 
 elif model == "attention":
     testset = Dataset_AttentionUNet(
-        files=test_files, domain=domain, vertical=vertical, manual_shuffle=False, features=features
+        files=test_file, domain=domain, vertical=vertical, manual_shuffle=False, features=features
     )
     testloader = torch.utils.data.DataLoader(
         testset, batch_size=bs_train, drop_last=False, shuffle=False, num_workers=2
@@ -108,9 +112,4 @@ elif model == "attention":
     model.load_state_dict(checkpoint["model_state_dict"])
     model = model.to(device)
     model.eval()
-
-out = f"{model}_output.npz"
-if model == "ann":
-    Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, stencil, out)
-elif model == "attention":
     Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device, out)
