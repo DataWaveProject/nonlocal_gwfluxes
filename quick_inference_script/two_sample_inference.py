@@ -39,9 +39,9 @@ bs_test = 1
 
 # assumes ckpts stored in model_ckpt dir
 if model == "attention":
-    PATH = f"model_ckpt/attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{epoch}.pt"
+    PATH = f"model-huggingface/attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{epoch}.pt"
 elif model == "ann" and stencil == 1:
-    PATH = f"model_ckpt/ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{epoch}.pt"
+    PATH = f"model-huggingface/ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{epoch}.pt"
 
 # path to test_files
 if model == "attention":
