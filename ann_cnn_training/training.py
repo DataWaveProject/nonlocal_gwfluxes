@@ -2,27 +2,30 @@ import sys
 import math
 import numpy as np
 
-# from netCDF4 import Dataset
+# ----------------------------------------------------------
 from time import time as time2
 import xarray as xr
 
+# ----------------------------------------------------------
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+# -----------------------------------------------------------
+import logging
+import argparse
 
 # ------------ for data parallelism --------------------------
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.distributed as dist
 import torch.multiprocessing as mp
-
-# ------------------------------------------------------------
 import torch.optim as optim
 
-# from torch.utils.data import DataLoader, random_split
-# from torch.utils.data import Dataset as TensorDataset
+# -----------------------------------------------------------
 from collections import OrderedDict
 import pandas as pd
 
+# -----------------------------------------------------------
 from dataloader_definition import Dataset_ANN_CNN
 from model_definition import ANN_CNN, ANN_CNN10
 from function_training import Training_ANN_CNN
@@ -30,32 +33,57 @@ from function_training import Training_ANN_CNN
 torch.set_printoptions(edgeitems=2)
 torch.manual_seed(123)
 
-# f = "/home/users/ag4680/myjupyter/137levs_ak_bk.npz"
-# data = np.load(f, mmap_mode="r")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# lev = data["lev"]
-# ht = data["ht"]
-# ak = data["ak"]
-# bk = data["bk"]
-# R = 287.05
-# T = 250
-# rho = 100 * lev / (R * T)
+# argument parser
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-d",
+    "--horizontal",
+    choices=["global"],
+    default="global",
+    help="Horizontal domain for training",
+)
+parser.add_argument(
+    "-v",
+    "--vertical",
+    choices=["global", "stratosphere_update"],
+    default="global",
+    help="Vertical domain for training",
+)
+parser.add_argument(
+    "-f",
+    "--features",
+    choices=["uvtheta", "uvw", "uvthetaw"],
+    default="uvtheta",
+    help="Feature set for training",
+)
+parser.add_argument(
+    "-s", "--stencil", type=int, choices=[1, 3, 5], default=1, help="Horizontal stencil for the NN"
+)
+parser.add_argument("-i", "--input_dir", default=".", help="Input directory with training data")
+parser.add_argument("-o", "--output_dir", default=".", help="Output directory to store checkpoints")
+args = parser.parse_args()
+# print parsed args
+print(f"horizontal={args.horizontal}")
+print(f"vertical={args.vertical}")
+print(f"features={args.features}")
+print(f"stencil={args.stencil}")
+print(f"input_dir={args.input_dir}")
+print(f"output_dir={args.output_dir}")
 
-device = torch.device(
-    "cuda:0" if torch.cuda.is_available() else "cpu"
-)  # 'cuda' to select all available GPUs
 
 # PARAMETERS AND HYPERPARAMETERS
 restart = False
 init_epoch = 1  # where to resume. Should have checkpoint saved for init_epoch-1. 1 for fresh runs.
 nepochs = 100
-ablation = True
+ablation = False
 # ----------------------
-domain = sys.argv[1]  # global' # 'regional'
-vertical = sys.argv[2]  #'global' # or 'stratosphere_only' or 'stratosphere_update'
+domain = args.horizontal  # global' # 'regional'
+vertical = args.vertical  #'global' # or 'stratosphere_only' or 'stratosphere_update'
 # ----------------------
-features = sys.argv[3]  #'uvtheta'
-stencil = int(sys.argv[4])  # stencil size
+features = args.features  #'uvtheta'
+stencil = args.stencil  # stencil size
 # ----------------------
 lr_min = 1e-4
 lr_max = 5e-4
@@ -68,32 +96,27 @@ else:
     bs_test = bs_train
 dropout = 0.1
 
-# log_filename = f"./ann_cnns_{stencil}x{stencil}_{domain}_{vertical}_{features}_epoch_{init_epoch}_to_{init_epoch+nepochs-1}.txt"
 
 if not ablation:
     log_filename = f"./ann_cnns_{stencil}x{stencil}_{domain}_{vertical}_{features}_epoch_{init_epoch}_to_{init_epoch+nepochs-1}.txt"
 else:
     log_filename = f"./ann_cnns_{stencil}x{stencil}_{domain}_{vertical}_{features}_epoch_{init_epoch}_to_{init_epoch+nepochs-1}_ABLATION_10hiddenlayers.txt"
-
-
-def write_log(*args):
-    line = " ".join([str(a) for a in args])
-    log_file = open(log_filename, "a")
-    log_file.write(line + "\n")
-    log_file.close()
-    print(line)
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    filename=log_filename, level=logging.INFO
+)  # must specify logging.INFO, otherwise will only output for level WARNINGS and above
 
 
 if device != "cpu":
     ngpus = torch.cuda.device_count()
-    write_log(f"NGPUS = {ngpus}")
+    logger.info(f"NGPUS = {ngpus}")
 
-write_log(
+logger.info(
     f"Training the {stencil}x{stencil} ANN-CNNs, {domain} horizontal and {vertical} vertical model with features {features} with min-max learning rates {lr_min} to {lr_max} for a CyclicLR, and dropout={dropout}.\n"
 )
 
-idir = sys.argv[5]
-odir = sys.argv[6]
+idir = args.input_dir  # sys.argv[5]
+odir = args.output_dir  # sys.argv[6]
 
 if vertical == "stratosphere_only":
     if stencil == 1:
@@ -124,22 +147,16 @@ test_files = []
 test_years = np.array([2015])
 for year in test_years:
     for months in np.arange(1, 13):
-        # for months in np.arange(1,3):
         test_files.append(f"{pre}{year}_constant_mu_sigma_scaling{str(months).zfill(2)}.nc")
 
-write_log(
+logger.info(
     f"Training the {domain} horizontal and {vertical} vertical model, with features {features} with min-max learning rates {lr_min} to {lr_max}, and dropout={dropout}. Starting from epoch {init_epoch}. Training on years {train_years} and testing on years {test_years}.\n"
 )
 
-# write_log(train_files)
-# write_log(test_files)
-write_log("Defined input files")
-write_log(f"train batch size = {bs_train}")
-write_log(f"validation batch size = {bs_test}")
+logger.info("Defined input files")
+logger.info(f"train batch size = {bs_train}")
+logger.info(f"validation batch size = {bs_test}")
 
-
-# print(train_files)
-# print(test_files)
 
 trainset = Dataset_ANN_CNN(
     files=train_files,
@@ -167,7 +184,7 @@ testloader = torch.utils.data.DataLoader(
 idim = trainset.idim
 odim = trainset.odim
 hdim = 4 * idim
-write_log(f"Input dim: {idim}, hidden dim: {hdim}, output dim: {odim}")
+logger.info(f"Input dim: {idim}, hidden dim: {hdim}, output dim: {odim}")
 
 if not ablation:
     model = ANN_CNN(idim=idim, odim=odim, hdim=hdim, dropout=dropout, stencil=trainset.stencil)
@@ -184,16 +201,9 @@ scheduler = torch.optim.lr_scheduler.CyclicLR(
     cycle_momentum=False,
 )
 loss_fn = nn.MSELoss()
-write_log(
+logger.info(
     f"model created. \n --- model size: {model.totalsize():.2f} MBs,\n --- Num params: {model.totalparams()/10**6:.3f} mil. "
 )
-
-# fac not used for vertical scaling yet, but good to have it
-fac = torch.ones(122)  # torch.from_numpy(rho[15:]**0.1)
-fac = (1.0 / fac).to(torch.float32)
-fac = fac.to(device)
-# write_log('fac_created')
-
 
 if not ablation:
     file_prefix = (
@@ -211,7 +221,7 @@ if restart:
     model.load_state_dict(checkpoint["model_state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
 
-write_log("Starting training ...")
+logger.info("Starting training ...")
 # Training loop
 model, loss_train, loss_test = Training_ANN_CNN(
     nepochs=nepochs,
@@ -228,5 +238,5 @@ model, loss_train, loss_test = Training_ANN_CNN(
     file_prefix=file_prefix,
     scheduler=scheduler,
     device=device,
-    log_filename=log_filename,
+    logger=logger,
 )

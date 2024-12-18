@@ -23,6 +23,46 @@
 source /home/groups/aditis2/ag4680/miniconda3/etc/profile.d/conda.sh
 conda activate siv2
 
+python training_ifs_transfer_learning.py \
+	-m ann \
+	-s 1 \
+	-d global \
+	-v stratosphere_only \
+	-f uvtheta \
+	-e 93 \
+	-i /path/to/ifs/fluxes/ \
+        -c /glade/derecho/scratch/agupta/torch_saved_models/ \
+        -o /glade/derecho/scratch/agupta/gw_inference_files/
+
+
+
+python ANN_inference.py \
+	-s 1 \
+	-d global \
+	-v global \
+	-f uvtheta \
+	-e 200 \
+	-t ERA5 \
+	-m 1 \
+	-i /glade/derecho/scratch/agupta/era5_training_data/ \
+        -c /glade/derecho/scratch/agupta/torch_saved_models/ \
+        -o /glade/derecho/scratch/agupta/torch_saved_models/
+
+
+
+
+python attn_inference.py \
+	-d horizontal \
+	-v global \
+	-f uvtheta \
+	-e 200 \
+	-t IFS \
+	-m 1 \
+	-i /glade/derecho/scratch/agupta/era5_training_data/ \
+        -c /glade/derecho/scratch/agupta/torch_saved_models/ \
+        -o /glade/derecho/scratch/agupta/torch_saved_models/
+
+
 # 'attention/ann' 'global'(horizontal) 'global'/'stratosphere_only'(vertical) and 'feature_set', 'CHECKPOINT_EPOCH'
 # TRAINING - ATTENTION
 #python training_ifs_transfer_learning.py attention global global uvtheta 110
@@ -54,9 +94,9 @@ conda activate siv2
 #python training_ifs_transfer_learning.py ann global global uvtheta 52 3
 #python training_ifs_transfer_learning.py ann global global uvthetaw 80 3
 
-python training_ifs_transfer_learning.py ann global stratosphere_only uvtheta 93 3
-python training_ifs_transfer_learning.py ann global stratosphere_only uvthetaw 38 3
+#python training_ifs_transfer_learning.py ann global stratosphere_only uvtheta 93 3
+#python training_ifs_transfer_learning.py ann global stratosphere_only uvthetaw 38 3
 
-python training_ifs_transfer_learning.py ann global stratosphere_update uvtheta 68 3
+#python training_ifs_transfer_learning.py ann global stratosphere_update uvtheta 68 3
 ###python training_ifs_transfer_learning.py ann global stratosphere_update uvthetaw XXX 3
 ###python training_ifs_transfer_learning.py ann global stratosphere_update uvw 100 3

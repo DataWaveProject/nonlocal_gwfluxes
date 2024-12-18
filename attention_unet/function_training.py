@@ -19,7 +19,7 @@ def Training_AttentionUNet(
     save,
     file_prefix,
     device,
-    log_filename,
+    logger,
     init_epoch=1,
     scheduler=0,
 ):
@@ -73,10 +73,8 @@ def Training_AttentionUNet(
 
         LOSS_TEST[epoch - 1 - init_epoch] = testloss / count
 
-        log = open(log_filename, "a")
-        print(
-            f"Epoch {epoch}, {(epoch-init_epoch+1)}/{nepochs}, training mseloss: {LOSS_TRAIN[epoch-1-init_epoch]:.6f}, testing mseloss: {LOSS_TEST[epoch-1-init_epoch]:.6f}",
-            file=log,
+        logger.info(
+            f"Epoch {epoch}, {(epoch-init_epoch+1)}/{nepochs}, training mseloss: {LOSS_TRAIN[epoch-1-init_epoch]:.6f}, testing mseloss: {LOSS_TEST[epoch-1-init_epoch]:.6f}"
         )
 
         # Saving the model at any given epoch
@@ -99,9 +97,7 @@ def Training_AttentionUNet(
     return model, LOSS_TRAIN, LOSS_TEST
 
 
-def Inference_and_Save_AttentionUNet(
-    model, testset, testloader, bs_test, device, log_filename, outfile
-):
+def Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device, logger, outfile):
     # ---------------------------------------------------------------------------------------
     idim = testset.idim
     odim = testset.odim
@@ -158,8 +154,6 @@ def Inference_and_Save_AttentionUNet(
 
     model.eval()
     model.dropout.train()  # this enables dropout during inference. By default dropout is OFF when model.eval()=True
-    log = open(log_filename, "a")
-    # print(f'model dropout after: {}', file=log)
     count = 0
     for i, (INP, OUT) in enumerate(testloader):
         # print([i,count])
@@ -171,8 +165,7 @@ def Inference_and_Save_AttentionUNet(
         OUT = OUT.to(device)
         S = OUT.shape
         if count == 0:
-            log = open(log_filename, "a")
-            print(f"Minibatch={i}, count={count}, output shape={S}", file=log)
+            logger.info(f"Minibatch={i}, count={count}, output shape={S}")
         PRED = model(INP)
         # write to netCDF
         if device != "cpu":

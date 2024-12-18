@@ -10,6 +10,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+# -----------------------------------------------------------
+import logging
+import argparse
+
 # -------- for data parallelism ----------
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.distributed as dist
@@ -19,24 +23,49 @@ from dataloader_attention_unet import Dataset_AttentionUNet
 from model_attention_unet import Attention_UNet
 from function_training import Training_AttentionUNet
 
-f = "/home/users/ag4680/myjupyter/137levs_ak_bk.npz"
-data = np.load(f, mmap_mode="r")
-lev = data["lev"]
-ht = data["ht"]
-ak = data["ak"]
-bk = data["bk"]
-R = 287.05
-T = 250
-rho = 100 * lev / (R * T)
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(device)
+
+
+# argument parser
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-d",
+    "--horizontal",
+    choices=["global"],
+    default="global",
+    help="Horizontal domain for training",
+)
+parser.add_argument(
+    "-v",
+    "--vertical",
+    choices=["global", "stratosphere_update"],
+    default="global",
+    help="Vertical domain for training",
+)
+parser.add_argument(
+    "-f",
+    "--features",
+    choices=["uvtheta", "uvw", "uvthetaw"],
+    default="uvtheta",
+    help="Feature set for training",
+)
+parser.add_argument(
+    "-i", "--input_dir", default=".", help="Input directory to fetch validation data"
+)
+parser.add_argument("-o", "--output_dir", default=".", help="Output directory to save outputs")
+args = parser.parse_args()
+# print parsed args
+print(f"horizontal={args.horizontal}")
+print(f"vertical={args.vertical}")
+print(f"features={args.features}")
+print(f"input_dir={args.input_dir}")
+print(f"output_dir={args.output_dir}")
+
 
 # ------------------------------------------------------------------------------
 
 # Define output file using hyperparameters
 # define writelog function
-
 # IMPORTANT RUN PARAMETERS TO SET BEFORE SUBMISSION
 restart = False
 init_epoch = (
@@ -47,11 +76,9 @@ bs_train = 40  # 80 (80 works for most). (does not work for global uvthetaw)
 bs_test = bs_train
 
 # --------------------------------------------------
-domain = "global"  # 'regional'
-vertical = sys.argv[1]  #'stratosphere_only' # 'global', # stratosphere_update
-features = sys.argv[
-    2
-]  #'uvthetaw' # 'uvtheta', ''uvthetaw', or 'uvw' for troposphere | additionally 'uvthetaN2' and 'uvthetawN2' for stratosphere_only
+domain = args.horizontal  # "global"  # 'regional'
+vertical = args.vertical  # sys.argv[1]  #'stratosphere_only' # 'global', # stratosphere_update
+features = args.features  # sys.argv[2]  #'uvthetaw' # 'uvtheta', ''uvthetaw', or 'uvw' for troposphere | additionally 'uvthetaN2' and 'uvthetawN2' for stratosphere_only
 # --------------------------------------------------
 if vertical == "stratosphere_only" or vertical == "stratosphere_update":
     lr_min = 1e-4
@@ -62,26 +89,18 @@ else:  # lower for the troposphere
 dropout = 0.05  # dropout probability
 
 
-idir = sys.argv[3]
-odir = sys.argv[4]
+idir = args.input_dir  # sys.argv[3]
+odir = args.output_dir  # sys.argv[4]
 
 log_filename = f"./attnunet_{domain}_{vertical}_{features}_smalldropout_epoch_{init_epoch}_to_{init_epoch+nepochs-1}.txt"
-
-
-# log_filename=f"./icml_train_ann-cnn_1x1_global_4hl_dropout0p1_hdim-2idim_restart_epoch_{init_epoch}_to_{init_epoch+nepochs-1}.txt"
-def write_log(*args):
-    line = " ".join([str(a) for a in args])
-    log_file = open(log_filename, "a")
-    log_file.write(line + "\n")
-    log_file.close()
-    print(line)
-
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename=log_filename, level=logging.INFO)
 
 if device != "cpu":
     ngpus = torch.cuda.device_count()
-    write_log(f"NGPUS = {ngpus}")
+    logger.info(f"NGPUS = {ngpus}")
 
-write_log(
+logger.info(
     f"Training the {domain} horizontal and {vertical} vertical model with features {features} with min-max learning rates {lr_min} to {lr_max}."
 )
 
@@ -107,11 +126,11 @@ for year in test_years:
         test_files.append(f"{pre}{year}_constant_mu_sigma_scaling{str(months).zfill(2)}.nc")
 
 
-write_log(
+logger.info(
     f"Training the {domain} horizontal and {vertical} vertical model, with features {features} with min-max learning rates {lr_min} to {lr_max}, and dropout={dropout}. Starting from epoch {init_epoch}. Training on years {train_years} and testing on years {test_years}."
 )
 
-write_log("Defined input files")
+logger.info("Defined input files")
 
 
 # create dataloaders
@@ -133,14 +152,14 @@ testloader = torch.utils.data.DataLoader(
 ch_in = trainset.idim
 ch_out = trainset.odim
 
-write_log(f"Input channel: {ch_in}")
-write_log(f"Output channel: {ch_out}")
+logger.info(f"Input channel: {ch_in}")
+logger.info(f"Output channel: {ch_out}")
 
 
 model = Attention_UNet(ch_in=ch_in, ch_out=ch_out, dropout=dropout)
 # port model to GPU. ensures optimizer is loaded to GPU as well
 model = model.to(device)
-write_log(
+logger.info(
     f"Model created. \n --- model size: {model.totalsize():.2f} MBs,\n --- Num params: {model.totalparams()/10**6:.3f} mil. "
 )
 
@@ -170,8 +189,6 @@ if restart:
         step_size_down=50,
         cycle_momentum=False,
     )
-    # scheduler.load_state_dict(checkpoint['scheduler'])
-    # epoch = checkpoint['epoch']
     loss_fn = checkpoint["loss"]
 
 
@@ -190,8 +207,8 @@ model, loss_train, loss_test = Training_AttentionUNet(
     file_prefix=file_prefix,
     scheduler=scheduler,
     device=device,
-    log_filename=log_filename,
+    logger=logger,
 )
 
 
-write_log("Model training complete")
+logger.info("Model training complete")
