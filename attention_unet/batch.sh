@@ -52,7 +52,7 @@ python training.py \
 # 	-m 1 \
 #       -i /glade/derecho/scratch/agupta/era5_training_data/ \
 #	-c /glade/derecho/scratch/agupta/torch_saved_models/ \
-#       -o /glade/derecho/scratch/agupta/torch_saved_models/
+#       -o /glade/derecho/scratch/agupta/gw_inference_files/
 
 
 #python inference_ifs.py global uvw 150 1
@@ -63,7 +63,7 @@ python training.py \
 #       -e 100 \
 #       -i /glade/derecho/scratch/agupta/era5_training_data/ \
 #       -c /glade/derecho/scratch/agupta/torch_saved_models/ \
-#       -o /glade/derecho/scratch/agupta/torch_saved_models/
+#       -o /glade/derecho/scratch/agupta/gw_inference_files/
 
 
 # INFERENCE

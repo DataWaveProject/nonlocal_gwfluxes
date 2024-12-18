@@ -51,6 +51,16 @@ python training.py \
 #	-o /glade/derecho/scratch/agupta/gw_inference_files/
 
 
+#python inference_ifs.py \
+#       -d global \
+#       -v stratosphere_update \
+#       -f uvtheta \
+#       -e 100 \
+#       -s 1 \
+#       -i /glade/derecho/scratch/agupta/era5_training_data/ \
+#       -c /glade/derecho/scratch/agupta/torch_saved_models/ \
+#       -o /glade/derecho/scratch/agupta/gw_inference_files/
+
 #python inference_ifs.py global stratosphere_update uvtheta 100 12 1
 #python inference_ifs.py global stratosphere_update uvw 100 12 1
 #python inference_ifs.py global stratosphere_update uvtheta 68 12 3
