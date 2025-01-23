@@ -8,7 +8,6 @@ from netCDF4 import Dataset
 import logging
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename=log_filename, level=logging.INFO)
 
 
 # For ANNs and ANN+CNNs

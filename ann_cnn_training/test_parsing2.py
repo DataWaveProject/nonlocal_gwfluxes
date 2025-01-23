@@ -3,7 +3,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-logging.basicConfig(filename="log.txt", level=logging.INFO)
+# logging.basicConfig(filename="log.txt", level=logging.INFO)
 
 
 def test_fn():
