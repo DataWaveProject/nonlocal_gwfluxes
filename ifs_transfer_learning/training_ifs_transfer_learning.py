@@ -56,7 +56,7 @@ device = torch.device(
 # argument parser
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-m",
+    "-M",
     "--model",
     choices=["ann", "attention"],
     help="retrain on ANN or Attention UNet",
@@ -115,6 +115,10 @@ print(f"input_dir={args.input_dir}")
 print(f"checkpoint_dir={args.ckpt_dir}")
 print(f"output_dir={args.output_dir}")
 
+idir = str(args.input_dir) + "/"
+cdir = str(args.ckpt_dir) + "/"
+odir = str(args.output_dir) + "/"
+
 # PARAMETERS AND HYPERPARAMETERS
 model_type = args.model  # sys.argv[1]  #'attention' # or 'ann'
 init_epoch = 1  # which epoch to resume from. Should have restart file from init_epoch-1 ready
@@ -139,14 +143,11 @@ elif model_type == "attention":
 ckpt_epoch = args.epoch  # sys.argv[5]
 if model_type == "ann":
     PATH = (
-        args.ckpt_dir
+        cdir
         + f"ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{ckpt_epoch}.pt"
     )
 elif model_type == "attention":
-    PATH = (
-        args.ckpt_dir
-        + f"attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{ckpt_epoch}.pt"
-    )
+    PATH = cdir + f"attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{ckpt_epoch}.pt"
 
 if vertical == "global" or vertical == "stratosphere_update":
     if model_type == "ann":
@@ -180,12 +181,12 @@ elif model_type == "attention":
 # This should point to the IFS files
 if vertical == "global" or vertical == "stratosphere_update":
     f = (
-        args.input_dir
+        idir
         + f"troposphere_and_stratosphere_{stencil}x{stencil}_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_constant_mu_sigma_scaling.nc"
     )
 elif vertical == "stratosphere_only":
     f = (
-        args.input_dir
+        idir
         + f"stratosphere_only_{stencil}x{stencil}_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_constant_mu_sigma_scaling.nc"
     )
 logger.info(f"File name: {f}")
@@ -354,13 +355,10 @@ logger.info("Model checkpoint loaded and prepared for re-training")
 # Set final weights names
 if model_type == "ann":
     file_prefix = (
-        args.output_dir
-        + f"TLIFS_ann_cnn_{stencil}x{stencil}_era5_ifs_{domain}_{vertical}_{features}_mseloss"
+        odir + f"TLIFS_ann_cnn_{stencil}x{stencil}_era5_ifs_{domain}_{vertical}_{features}_mseloss"
     )
 elif model_type == "attention":
-    file_prefix = (
-        args.output_dir + f"TLIFS_attnunet_era5_ifs_{domain}_{vertical}_{features}_mseloss"
-    )
+    file_prefix = odir + f"TLIFS_attnunet_era5_ifs_{domain}_{vertical}_{features}_mseloss"
 
 # might not need to restart - so haven't added that part here. If needed, borrow it from other files
 

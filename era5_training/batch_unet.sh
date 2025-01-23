@@ -25,55 +25,39 @@ source ~/nonlocal_gwfluxes/.nlgw/bin/activate
 
 
 python training.py \
-	-m attention \
+	-M attention \
         -d global  \
         -v stratosphere_update \
         -f uvw \
         -i /glade/derecho/scratch/agupta/era5_training_data/ \
         -o /glade/derecho/scratch/agupta/torch_saved_models/
 
-#for month in 1 2 3 4 5 6 7 8 9 10 11 12;
-#do
-#	python inference.py global uvtheta 110 $month
-#	python inference.py global uvthetaw 119 $month
-	
-#	python inference.py stratosphere_only uvtheta 119 $month
-#	python inference.py stratosphere_only uvthetaw 105 $month
-
-#	python inference.py stratosphere_update uvtheta 131 $month
-#	python inference.py stratosphere_update uvthetaw 119 $month
-#	python inference.py stratosphere_update uvw 119 $month
-#done
-
 
 #python inference.py \
+# 	-M attention \
+#	-d global  \
 #       -v stratosphere_update \
 #       -f uvw \
 # 	-e 100 \
+#	-s 1 \
+#	-t era5 \
 # 	-m 1 \
 #       -i /glade/derecho/scratch/agupta/era5_training_data/ \
 #	-c /glade/derecho/scratch/agupta/torch_saved_models/ \
 #       -o /glade/derecho/scratch/agupta/gw_inference_files/
 
 
-#python inference_ifs.py global uvw 150 1
 
-#python inference_ifs.py \
-#       -v stratosphere_update \
-#       -f uvw \
-#       -e 100 \
-#       -i /glade/derecho/scratch/agupta/era5_training_data/ \
-#       -c /glade/derecho/scratch/agupta/torch_saved_models/ \
-#       -o /glade/derecho/scratch/agupta/gw_inference_files/
+# To loop INFERENCE over multiple months, insert the above code in the loop below
+#for month in 1 2 3 4 5 6 7 8 9 10 11 12;
+#do
+#       python inference.py global uvtheta 110 $month
+#       python inference.py global uvthetaw 119 $month
 
+#       python inference.py stratosphere_only uvtheta 119 $month
+#       python inference.py stratosphere_only uvthetaw 105 $month
 
-# INFERENCE
-# Most optimal epochs to use for respective configs
-# stratosphere_only | uvtheta  | epoch=100 | month
-# stratosphere_only | uvthetaw | epoch=100 | month
-# Usage: python inference.py <vertical> <features> <epoch> <month>
-#python probabilistic_inference.py stratosphere_only uvthetaw 100 $month 1
-#python probabilistic_inference.py stratosphere_only uvtheta 100 $month 1
-
-
-
+#       python inference.py stratosphere_update uvtheta 131 $month
+#       python inference.py stratosphere_update uvthetaw 119 $month
+#       python inference.py stratosphere_update uvw 119 $month
+#done
