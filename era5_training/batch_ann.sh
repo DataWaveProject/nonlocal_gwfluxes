@@ -23,6 +23,7 @@ source ~/nonlocal_gwfluxes/.nlgw/bin/activate
 stencil=3
 # Usage: python training.py <domain> <vertical> <features> <stencil> <input_file_dir> <torch_model_dir>
 python training.py \
+	-m ann \
 	-d global  \
 	-v stratosphere_update \
 	-f uvw \
