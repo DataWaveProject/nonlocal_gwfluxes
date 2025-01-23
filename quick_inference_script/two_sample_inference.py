@@ -48,22 +48,6 @@ if model == "attention":
 elif model == "ann" and stencil == 1:
     PATH = f"/glade/derecho/scratch/agupta/hugging_face_checkpoints/ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{epoch}.pt"
 
-# path to test_files
-# if model == "attention":
-#    test_file = [
-#        f"test_files/test_1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_2015_constant_mu_sigma_scaling08.nc"
-#    ]
-# elif model == "ann":
-#    if stencil == 1:
-#        test_file = [
-#            f"test_files/test_1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_2015_constant_mu_sigma_scaling08.nc"
-#        ]
-#    elif stencil == 3:
-#        test_file = [
-#            f"test_files/test_nonlocal_3x3_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_2015_constant_mu_sigma_scaling08.nc"
-#        ]
-
-
 # eventually we will not need the files above. Just reading from the netCDF directly right now
 
 # idim, odim, ch_in, ch_out
@@ -86,9 +70,6 @@ if model == "ann":
 
     model = ANN_CNN(idim=idim, odim=odim, hdim=hdim, dropout=dropout, stencil=stencil)
     loss_fn = nn.MSELoss()
-    # print(
-    #    f"Model created. \n --- model size: {model.totalsize():.2f} MBs,\n --- Num params: {model.totalparams()/10**6:.3f} mil. "
-    # )
     checkpoint = torch.load(PATH, map_location=torch.device(device))
     model.load_state_dict(checkpoint["model_state_dict"])
     model = model.to(device)
@@ -100,9 +81,6 @@ elif model == "attention":
 
     model = Attention_UNet(ch_in=ch_in, ch_out=ch_out, dropout=dropout)
     loss_fn = nn.MSELoss()
-    # print(
-    #    f"Model created. \n --- model size: {model.totalsize():.2f} MBs,\n --- Num params: {model.totalparams()/10**6:.3f} mil. "
-    # )
     checkpoint = torch.load(PATH, map_location=torch.device(device))
     model.load_state_dict(checkpoint["model_state_dict"])
     model = model.to(device)

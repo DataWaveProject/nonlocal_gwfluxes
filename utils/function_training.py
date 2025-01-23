@@ -1,9 +1,14 @@
-from netCDF4 import Dataset
+# This is for training the Attention U-Net only - not the nonlocal ANN+CNNs
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from netCDF4 import Dataset
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename=log_filename, level=logging.INFO)
 
 
 # For ANNs and ANN+CNNs
@@ -20,7 +25,6 @@ def Training_ANN_CNN(
     save,
     file_prefix,
     device,
-    logger,
     init_epoch=1,
     scheduler=0,
 ):
@@ -91,6 +95,7 @@ def Training_ANN_CNN(
         logger.info(
             f"Epoch {epoch}, {(epoch-init_epoch+1)}/{nepochs}, training mseloss: {LOSS_TRAIN[epoch-1-init_epoch]:.6f}, testing mseloss: {LOSS_TEST[epoch-1-init_epoch]:.6f}"
         )
+
         # Saving the model at any given epoch
         if save:
             savepath = f"{file_prefix}_train_epoch{epoch}.pt"
@@ -111,9 +116,7 @@ def Training_ANN_CNN(
     return model, LOSS_TRAIN, LOSS_TEST
 
 
-def Inference_and_Save_ANN_CNN(
-    model, testset, testloader, bs_test, device, stencil, logger, outfile
-):
+def Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, stencil, outfile):
     # ---------------------------------------------------------------------------------------
     idim = testset.idim
     odim = testset.odim
@@ -169,7 +172,6 @@ def Inference_and_Save_ANN_CNN(
     # ----------------------------------------------------------------------------------------
 
     model.eval()
-    model.dropout.train()  # this enables dropout during inference. By default dropout is OFF when model.eval()=True
     testloss = 0.0
     count = 0
     for i, (INP, OUT) in enumerate(testloader):
@@ -194,9 +196,6 @@ def Inference_and_Save_ANN_CNN(
         if count == 0:
             logger.info(f"Minibatch={i}, count={count}, output shape={S}")
 
-        # print(f'OUT.shape = {OUT.shape}')
-        # print(f'PRED.shape = {PRED.shape}')
-
         # Reshape input and output from (batch_size*ny*nx,nz) to (batch_size,nz,ny,nx)
         OUT = OUT.reshape(nt, ny, nx, odim)
         OUT = torch.permute(OUT, (0, 3, 1, 2))
@@ -218,6 +217,95 @@ def Inference_and_Save_ANN_CNN(
         count += nt
 
     out.close()
+
+
+def Training_AttentionUNet(
+    nepochs,
+    model,
+    optimizer,
+    loss_fn,
+    trainloader,
+    testloader,
+    bs_train,
+    bs_test,
+    save,
+    file_prefix,
+    device,
+    init_epoch=1,
+    scheduler=0,
+):
+    LOSS_TRAIN = np.zeros((nepochs))
+    LOSS_TEST = np.zeros((nepochs))
+
+    print("Training ...")
+    for epoch in np.arange(init_epoch + 0, init_epoch + nepochs):
+        # --------- training ----------
+        model.train()
+        trainloss = 0.0
+        count = 0.0
+        for i, (inp, out) in enumerate(trainloader):
+            # print(i)
+            inp = inp.to(device)
+            out = out.to(device)
+            # print(f'1 {inp.shape}')
+            # print(f'2 {out.shape}')
+            pred = model(inp)
+            # print('predicted')
+            loss = loss_fn(pred, out)
+            # print('loss-ed')
+            optimizer.zero_grad()
+            # print('optimized')
+            # backward propagation
+            loss.backward()
+            # print('back propagated')
+            # parameter update step
+            # print('5')
+            optimizer.step()
+            if scheduler != 0:
+                scheduler.step()
+            trainloss += loss  # .item()#.item()
+            count += 1
+            # print('moving on')
+
+        LOSS_TRAIN[epoch - 1 - init_epoch] = trainloss / count
+
+        # --------- testing ------------
+        model.eval()
+        # print('===== TESTING ============')
+        testloss = 0.0
+        count = 0.0
+        for i, (inp, out) in enumerate(testloader):
+            inp = inp.to(device)
+            out = out.to(device)
+            pred = model(inp)
+            loss2 = loss_fn(pred, out)
+            testloss += loss2.item()
+            count += 1
+
+        LOSS_TEST[epoch - 1 - init_epoch] = testloss / count
+
+        logger.info(
+            f"Epoch {epoch}, {(epoch-init_epoch+1)}/{nepochs}, training mseloss: {LOSS_TRAIN[epoch-1-init_epoch]:.6f}, testing mseloss: {LOSS_TEST[epoch-1-init_epoch]:.6f}"
+        )
+
+        # Saving the model at any given epoch
+        if save:
+            savepath = f"{file_prefix}_train_epoch{epoch}.pt"
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "loss": loss_fn,
+                    "loss_train": LOSS_TRAIN,
+                    "loss_test": LOSS_TEST,
+                    "activation": "LeakyRelu()",
+                    "scheduler": "CyclicLR",
+                },
+                savepath,
+            )
+
+    return model, LOSS_TRAIN, LOSS_TEST
 
 
 def Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device, logger, outfile):
@@ -296,3 +384,177 @@ def Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device
         count = count + S[0]
 
     out.close()
+
+
+# Transfer learning related functions
+def Model_Freeze_Transfer_Learning(model, model_type):
+    # freezes all but last output layers for the respective models
+    for params in model.parameters():
+        params.requires_grad = False
+
+    # if model_type=='ann':
+    #    model.output.weight.requires_grad = True
+    #    model.output.bias.requires_grad   = True
+    # elif model_type=='attention':
+    #    model.conv1x1.weight.requires_grad = True
+    #    model.conv1x1.bias.requires_grad   = True
+
+    # unfreezeing just the last layer might not be enough since it is linear and their is no nonlinearity. Plus the error reduction in TL training is low and not god enough
+    # Unfreezing the last two layers now
+    if model_type == "ann":
+        model.layer6.weight.requires_grad = True
+        model.layer6.bias.requires_grad = True
+        model.bnorm6.weight.requires_grad = True
+        model.bnorm6.bias.requires_grad = True
+        model.output.weight.requires_grad = True
+        model.output.bias.requires_grad = True
+
+    elif model_type == "attention":
+        # unfreezing the last upsampling layer
+        for params in model.upconv2.parameters():
+            params.requires_grad = True
+
+        # unfreezing the final linear conv layer
+        model.conv1x1.weight.requires_grad = True
+        model.conv1x1.bias.requires_grad = True
+
+    return model
+
+
+def Training_ANN_CNN_TransferLearning(
+    nepochs,
+    model,
+    optimizer,
+    loss_fn,
+    trainloader,
+    testloader,
+    stencil,
+    bs_train,
+    bs_test,
+    save,
+    file_prefix,
+    device,
+    init_epoch=1,
+    scheduler=0,
+):
+    LOSS_TRAIN = np.zeros((nepochs))
+
+    for epoch in np.arange(init_epoch + 0, init_epoch + nepochs):
+        # --------- training ----------
+        trainloss = 0.0
+        count = 0.0
+        for i, (inp, out) in enumerate(trainloader):
+            # print(i)
+            inp = inp.to(device)
+            out = out.to(device)
+            if stencil == 1:
+                S = inp.shape
+                inp = inp.reshape(S[0] * S[1], S[2])
+                S = out.shape
+                out = out.reshape(S[0] * S[1], -1)
+            elif stencil > 1:
+                S = inp.shape
+                inp = inp.reshape(S[0] * S[1], S[2], S[3], S[4])
+                S = out.shape
+                out = out.reshape(S[0] * S[1], -1)
+            pred = model(inp)
+            loss = loss_fn(pred, out)  # loss_fn(pred*fac,out*fac) #+ weight_decay*l2_norm  #/fac) +
+            optimizer.zero_grad()  # flush the gradients from the last step and set to zeros, they accumulate otherwise
+            # backward propagation
+            loss.backward()
+            # parameter update step
+            # print('5')
+            optimizer.step()
+            if scheduler != 0:
+                scheduler.step()
+            trainloss += loss
+            count += 1
+
+        LOSS_TRAIN[epoch - 1 - init_epoch] = trainloss / count
+
+        logger.info(
+            f"Epoch {epoch}, {(epoch-init_epoch+1)}/{nepochs}, training mseloss: {LOSS_TRAIN[epoch-1-init_epoch]:.6f}"
+        )
+
+        # Saving the model at any given epoch
+        if save:
+            savepath = f"{file_prefix}_train_epoch{epoch}.pt"
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "loss": loss_fn,
+                    "loss_train": LOSS_TRAIN,
+                    #'loss_test': LOSS_TEST,
+                    "scheduler": "CyclicLR",
+                },
+                savepath,
+            )
+
+    return model, LOSS_TRAIN
+
+
+# Differs from regular training in 1. No validation since low IFS data, 2. No model.train() is invoked, since model freeze function is invoked in the main file
+# Yet, accepting testloader as an argument in case needed in the future
+def Training_AttentionUNet_TransferLearning(
+    nepochs,
+    model,
+    optimizer,
+    loss_fn,
+    trainloader,
+    testloader,
+    bs_train,
+    bs_test,
+    save,
+    file_prefix,
+    device,
+    init_epoch=1,
+    scheduler=0,
+):
+    LOSS_TRAIN = np.zeros((nepochs))
+
+    for epoch in np.arange(init_epoch + 0, init_epoch + nepochs):
+        # --------- training ----------
+        trainloss = 0.0
+        count = 0.0
+        for i, (inp, out) in enumerate(trainloader):
+            # print(i)
+            inp = inp.to(device)
+            out = out.to(device)
+            pred = model(inp)
+            # print(f"INP: inp.get_device()")
+            # print(f"OUT: inp.get_device()")
+            loss = loss_fn(pred, out)
+            optimizer.zero_grad()
+            # backward propagation
+            loss.backward()
+            optimizer.step()
+            if scheduler != 0:
+                scheduler.step()
+            trainloss += loss  # .item()#.item()
+            count += 1
+
+        LOSS_TRAIN[epoch - 1 - init_epoch] = trainloss / count
+
+        logger.info(
+            f"Epoch {epoch}, {(epoch-init_epoch+1)}/{nepochs}, training mseloss: {LOSS_TRAIN[epoch-1-init_epoch]:.6f}"
+        )
+
+        # Saving the model at any given epoch
+        if save:
+            savepath = f"{file_prefix}_train_epoch{epoch}.pt"
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "loss": loss_fn,
+                    "loss_train": LOSS_TRAIN,
+                    #'loss_test': LOSS_TEST,
+                    "scheduler": "CyclicLR",
+                },
+                savepath,
+            )
+
+    return model, LOSS_TRAIN
