@@ -40,7 +40,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # argument parser
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-m",
+    "-M",
     "--model",
     choices=["ann", "attention"],
     default="ann",
@@ -105,10 +105,10 @@ stencil = args.stencil  # stencil size
 # ----- model sanity check ----------
 if model == "attention" and stencil > 1:
     raise ValueError(
-        "The selected model is Attention UNet but stencil > 1 is only allowed for ANNs"
+        "The selected model is Attention UNet but stencil > 1 is only allowed for ANNs."
     )
 if stencil % 2 == 0:
-    raise ValueError("stencil must be odd.")
+    raise ValueError("Stencil must be odd.")
 # ----------------------
 lr_min = 1e-4
 lr_max = 5e-4
@@ -145,8 +145,8 @@ elif model == "attention":
         f"Training the Attention UNet, {domain} horizontal and {vertical} vertical model with features {features} with min-max learning rates {lr_min} to {lr_max} for a CyclicLR, and dropout={dropout}.\n"
     )
 
-idir = args.input_dir
-odir = args.output_dir
+idir = str(args.input_dir) + "/"
+odir = str(args.output_dir) + "/"
 
 if vertical == "stratosphere_only":
     if stencil == 1:

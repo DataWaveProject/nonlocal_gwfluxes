@@ -24,7 +24,7 @@ source /home/groups/aditis2/ag4680/miniconda3/etc/profile.d/conda.sh
 conda activate siv2
 
 python training_ifs_transfer_learning.py \
-	-m ann \
+	-M ann \
 	-s 1 \
 	-d global \
 	-v stratosphere_only \

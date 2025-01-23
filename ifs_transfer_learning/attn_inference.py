@@ -108,8 +108,10 @@ epoch = args.epoch  # int(sys.argv[3])
 teston = args.teston  # sys.argv[4]
 
 # model checkpoint
+idir = str(args.input_dir) + "/"
+odir = str(args.output_dir) + "/"
 pref = (
-    args.ckpt_dir
+    str(args.ckpt_dir) + "/"
 )  # "/scratch/users/ag4680/torch_saved_models/transfer_learning_IFS/attention_unet/"
 ckpt = f"TLIFS_attnunet_era5_ifs_{domain}_{vertical}_{features}_mseloss_train_epoch{str(epoch).zfill(2)}.pt"
 
@@ -131,11 +133,10 @@ if teston == "ERA5":
     logger.info(f"Inference for month {test_month}")
     if vertical == "stratosphere_only":
         pre = (
-            args.input_dir
-            + f"stratosphere_1x1_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_"
+            idir + f"stratosphere_1x1_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_"
         )
     elif vertical == "global" or vertical == "stratosphere_update":
-        pre = args.input_dir + f"1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_"
+        pre = idir + f"1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_"
     for year in test_years:
         for months in np.arange(test_month, test_month + 1):
             test_files.append(f"{pre}{year}_constant_mu_sigma_scaling{str(months).zfill(2)}.nc")
@@ -144,12 +145,12 @@ if teston == "ERA5":
 elif teston == "IFS":
     if vertical == "stratosphere_only":
         test_files = [
-            args.input_dir
+            idir
             + f"stratosphere_only_1x1_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_constant_mu_sigma_scaling.nc"
         ]
     elif vertical == "global" or vertical == "stratosphere_update":
         test_files = [
-            args.input_dir
+            idir
             + f"troposphere_and_stratosphere_1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_constant_mu_sigma_scaling.nc"
         ]
 
@@ -188,22 +189,16 @@ model.eval()
 S = ckpt.split(".")
 if dropout == 0:
     if teston == "ERA5":
-        out = (
-            args.output_dir + f"TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_testedonERA5.nc"
-        )
+        out = odir + f"TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_testedonERA5.nc"
     else:
-        out = args.output_dir + f"TLIFS_inference_{S[0]}_testedonIFS.nc"
+        out = odir + f"TLIFS_inference_{S[0]}_testedonIFS.nc"
 else:
     if teston == "ERA5":
         out = (
-            args.output_dir
-            + f"TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON_testedonERA5.nc"
+            odir + f"TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON_testedonERA5.nc"
         )
     else:
-        out = (
-            args.output_dir
-            + f"TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON_testedonIFS.nc"
-        )
+        out = odir + f"TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON_testedonIFS.nc"
 logger.info(f"Output NC file: {out}")
 
 # better to create the file within the inference_and_save function

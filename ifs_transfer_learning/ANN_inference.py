@@ -122,7 +122,11 @@ else:
 
 
 # model checkpoint
-pref = args.ckpt_dir  # "/scratch/users/ag4680/torch_saved_models/transfer_learning_IFS/ann_cnn/"
+idir = str(args.input_dir) + "/"
+odir = str(args.output_dir) + "/"
+pref = (
+    str(args.ckpt_dir) + "/"
+)  # "/scratch/users/ag4680/torch_saved_models/transfer_learning_IFS/ann_cnn/"
 ckpt = f"TLIFS_ann_cnn_{stencil}x{stencil}_era5_ifs_{domain}_{vertical}_{features}_mseloss_train_epoch{str(epoch).zfill(2)}.pt"
 
 log_filename = f"./TLIFS_inference_ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_{features}_ckpt_epoch_{epoch}.txt"
@@ -145,23 +149,23 @@ if teston == "ERA5":
     if vertical == "stratosphere_only":
         if stencil == 1:
             pre = (
-                args.input_dir
+                idir
                 + f"stratosphere_{stencil}x{stencil}_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_"
             )
         else:
             pre = (
-                args.input_dir
+                idir
                 + f"stratosphere_nonlocal_{stencil}x{stencil}_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_"
             )
     elif vertical == "global" or vertical == "stratosphere_update":
         if stencil == 1:
             pre = (
-                args.input_dir
+                idir
                 + f"{stencil}x{stencil}_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_"
             )
         else:
             pre = (
-                args.input_dir
+                idir
                 + f"nonlocal_{stencil}x{stencil}_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_"
             )
 
@@ -173,12 +177,12 @@ if teston == "ERA5":
 elif teston == "IFS":
     if vertical == "stratosphere_only":
         test_files = [
-            args.input_dir
+            idir
             + f"stratosphere_only_{stencil}x{stencil}_inputfeatures_u_v_theta_w_N2_uw_vw_era5_training_data_hourly_constant_mu_sigma_scaling.nc"
         ]
     elif vertical == "global" or vertical == "stratosphere_update":
         test_files = [
-            args.input_dir
+            idir
             + f"troposphere_and_stratosphere_{stencil}x{stencil}_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_constant_mu_sigma_scaling.nc"
         ]
 
@@ -223,22 +227,16 @@ S = ckpt.split(".")
 # can simplify this further using args.teston
 if dropout == 0:
     if teston == "ERA5":
-        out = (
-            args.output_dir + f"TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_testedonERA5.nc"
-        )
+        out = odir + f"TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_testedonERA5.nc"
     else:
-        out = args.output_dir + f"TLIFS_inference_{S[0]}_testedonIFS.nc"
+        out = odir + f"TLIFS_inference_{S[0]}_testedonIFS.nc"
 else:
     if teston == "ERA5":
         out = (
-            args.output_dir
-            + f"TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON_testedonERA5.nc"
+            odir + f"TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON_testedonERA5.nc"
         )
     else:
-        out = (
-            args.output_dir
-            + f"TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON_testedonIFS.nc"
-        )
+        out = odir + f"TLIFS_inference_{S[0]}_{test_years[0]}_{test_month}_dropoutON_testedonIFS.nc"
 logger.info(f"Output NC file: {out}")
 
 # better to create the file within the inference_and_save function

@@ -23,48 +23,40 @@ source ~/nonlocal_gwfluxes/.nlgw/bin/activate
 stencil=3
 # Usage: python training.py <domain> <vertical> <features> <stencil> <input_file_dir> <torch_model_dir>
 python training.py \
-	-m ann \
+	-M ann \
 	-d global  \
 	-v stratosphere_update \
 	-f uvw \
 	-s $stencil  \
+	-t era5 \
 	-i /glade/derecho/scratch/agupta/era5_training_data/ \
 	-o /glade/derecho/scratch/agupta/torch_saved_models/ 
 
-# INFERENCE
-# Usage: python inference.py <domain> <vertical> <features> <epoch_no> <month> <stencil>
-#for month in 1 2 3 4 5 6 7 8 9 10 11 12;
-#do
-#	python inference.py global stratosphere_update uvtheta 100 $month 1
-#	python inference.py global stratosphere_update uvw 100 $month 1
-#	python inference.py global stratosphere_update uvtheta 68 $month 3
-#done
 
 #python inference.py \
+#	-M ann \
 #	-d global \
 #	-v stratosphere_update \
 #	-f uvtheta \
 #	-e 100 \
-#	-m $month \ 
+#	-m 1 \ 
 #	-s 1 \
+#	-t era5 \
 #	-i /glade/derecho/scratch/agupta/era5_training_data/ \
 #	-c /glade/derecho/scratch/agupta/torch_saved_models/ \
 #	-o /glade/derecho/scratch/agupta/gw_inference_files/
 
 
-#python inference_ifs.py \
-#       -d global \
-#       -v stratosphere_update \
-#       -f uvtheta \
-#       -e 100 \
-#       -s 1 \
-#       -i /glade/derecho/scratch/agupta/era5_training_data/ \
-#       -c /glade/derecho/scratch/agupta/torch_saved_models/ \
-#       -o /glade/derecho/scratch/agupta/gw_inference_files/
 
-#python inference_ifs.py global stratosphere_update uvtheta 100 12 1
-#python inference_ifs.py global stratosphere_update uvw 100 12 1
-#python inference_ifs.py global stratosphere_update uvtheta 68 12 3
+
+# To loop INFERENCE over multiple months insert the above command in the loop below
+# Usage: python inference.py <domain> <vertical> <features> <epoch_no> <month> <stencil>
+#for month in 1 2 3 4 5 6 7 8 9 10 11 12;
+#do
+#       python inference.py global stratosphere_update uvtheta 100 $month 1
+#       python inference.py global stratosphere_update uvw 100 $month 1
+#       python inference.py global stratosphere_update uvtheta 68 $month 3
+#done
 
 
 # submit the same script for 1x1 uvthetaw, 3x3 uvthetaw, and 3x3 uvw when finished
