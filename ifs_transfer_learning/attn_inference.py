@@ -15,12 +15,14 @@ import torch.optim as optim
 # -----------------------------------------------------------
 import logging
 import argparse
+from pathlib import Path
 
 # -------- for data parallelism ----------
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
+sys.path.append("../utils/")
 from dataloader_definition import Dataset_AttentionUNet
 from model_definition import Attention_UNet
 from function_training import Inference_and_Save_AttentionUNet
@@ -33,7 +35,8 @@ parser.add_argument(
     "-m",
     "--month",
     type=int,
-    choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    choices=range(1, 13),
+    metavar="{1,2,...,11,12}",
     help="Month to run inference on. Only valid when tested on set to ERA5",
 )
 parser.add_argument(
@@ -70,10 +73,16 @@ parser.add_argument(
     help="Checkpoint (epoch)of the model to be used for transfer learning",
 )
 parser.add_argument(
-    "-i", "--input_dir", default=".", help="Input directory to fetch validation data"
+    "-i",
+    "--input_dir",
+    default=Path.cwd(),
+    help="Input directory to fetch validation data",
+    type=Path,
 )
-parser.add_argument("-c", "--ckpt_dir", default=".", help="Checkpoint directory")
-parser.add_argument("-o", "--output_dir", default=".", help="Output directory to save outputs")
+parser.add_argument("-c", "--ckpt_dir", default=Path.cwd(), help="Checkpoint directory", type=Path)
+parser.add_argument(
+    "-o", "--output_dir", default=Path.cwd(), help="Output directory to save outputs", type=Path
+)
 args = parser.parse_args()
 # print parsed args
 print(f"month={args.month}")
@@ -199,6 +208,6 @@ logger.info(f"Output NC file: {out}")
 
 # better to create the file within the inference_and_save function
 logger.info("Initiating inference")
-Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device, logger, out)
+Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device, out)
 
 logger.info("Inference complete")

@@ -17,6 +17,7 @@ import torch.nn.functional as F
 # -----------------------------------------------------------
 import logging
 import argparse
+from pathlib import Path
 
 # ------------ for data parallelism --------------------------
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -29,7 +30,7 @@ import torch.optim as optim
 from collections import OrderedDict
 import pandas as pd
 
-
+sys.path.append("../utils/")
 from dataloader_definition import Dataset_ANN_CNN, Dataset_AttentionUNet
 from model_definition import ANN_CNN, Attention_UNet
 from function_training import (
@@ -96,10 +97,12 @@ parser.add_argument(
     help="checkpoint (epoch)of the model to be used for transfer learning",
 )
 parser.add_argument(
-    "-i", "--input_dir", default=".", help="Input directory to fetch validation data"
+    "-i", "--input_dir", default=".", help="Input directory to fetch validation data", type=Path
 )
-parser.add_argument("-c", "--ckpt_dir", default=".", help="Checkpoint directory")
-parser.add_argument("-o", "--output_dir", default=".", help="Output directory to save outputs")
+parser.add_argument("-c", "--ckpt_dir", default=Path.cwd(), help="Checkpoint directory", type=Path)
+parser.add_argument(
+    "-o", "--output_dir", default=Path.cwd(), help="Output directory to save outputs", type=Path
+)
 args = parser.parse_args()
 # print parsed args
 print(f"model={args.model}")
@@ -378,7 +381,6 @@ if model_type == "ann":
         file_prefix=file_prefix,
         scheduler=scheduler,
         device=device,
-        logger=logger,
     )
 elif model_type == "attention":
     model, loss_train = Training_AttentionUNet_TransferLearning(
@@ -395,7 +397,6 @@ elif model_type == "attention":
         file_prefix=file_prefix,
         scheduler=scheduler,
         device=device,
-        logger=logger,
     )
 
 logger.info("Training complete.")

@@ -14,12 +14,14 @@ import torch.optim as optim
 # -----------------------------------------------------------
 import logging
 import argparse
+from pathlib import Path
 
 # -------- for data parallelism ----------
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
+sys.path.append("../utils/")
 from dataloader_definition import Dataset_ANN_CNN
 from model_definition import ANN_CNN
 from function_training import Inference_and_Save_ANN_CNN
@@ -32,7 +34,8 @@ parser.add_argument(
     "-m",
     "--month",
     type=int,
-    choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    choices=range(1, 13),
+    metavar="{1,2,...,11,12}",
     help="Month to run inference on. Only valid when tested on set to ERA5",
 )
 parser.add_argument(
@@ -77,10 +80,16 @@ parser.add_argument(
     help="Checkpoint (epoch)of the model to be used for transfer learning",
 )
 parser.add_argument(
-    "-i", "--input_dir", default=".", help="Input directory to fetch validation data"
+    "-i",
+    "--input_dir",
+    default=Path.cwd(),
+    help="Input directory to fetch validation data",
+    type=Path,
 )
-parser.add_argument("-c", "--ckpt_dir", default=".", help="Checkpoint directory")
-parser.add_argument("-o", "--output_dir", default=".", help="Output directory to save outputs")
+parser.add_argument("-c", "--ckpt_dir", default=Path.cwd(), help="Checkpoint directory", type=Path)
+parser.add_argument(
+    "-o", "--output_dir", default=Path.cwd(), help="Output directory to save outputs", type=Path
+)
 args = parser.parse_args()
 # print parsed args
 print(f"month={args.month}")
@@ -240,7 +249,6 @@ Inference_and_Save_ANN_CNN(
     testloader=testloader,
     bs_test=bs_test,
     device=device,
-    logger=logger,
     outfile=out,
     stencil=stencil,
 )
