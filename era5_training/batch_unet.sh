@@ -25,7 +25,7 @@ source ~/nonlocal_gwfluxes/.nlgw/bin/activate
 
 
 python training.py \
-	-m ann
+	-m attention \
         -d global  \
         -v stratosphere_update \
         -f uvw \
