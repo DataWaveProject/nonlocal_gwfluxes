@@ -3,6 +3,7 @@
 # BOTH model checkpoints and test files are stored on hugging face: https://huggingface.co/amangupta2/nonlocal_gwfluxes/tree/main
 
 import numpy as np
+import subprocess
 
 # import xarray as xr
 # import pandas as pd
@@ -41,12 +42,33 @@ epoch = 94
 if model == "attention":
     stencil = 1
 
+D = "/glade/derecho/scratch/agupta/hugging_face_checkpoints/"
+if not os.path.exists(D + "ann_cnn_1x1_global_global_era5_uvthetaw__train_epoch94.pt"):
+    subprocess.run(
+        "wget https://huggingface.co/amangupta2/iccs_coupling_checkpoints/resolve/main/ann_cnn_1x1_global_global_era5_uvthetaw__train_epoch94.pt -P "
+        + D,
+        shell=True,
+    )
+if not os.path.exists(D + "attnunet_era5_global_global_uvthetaw_mseloss_train_epoch119.pt"):
+    subprocess.run(
+        "wget https://huggingface.co/amangupta2/iccs_coupling_checkpoints/resolve/main/attnunet_era5_global_global_uvthetaw_mseloss_train_epoch119.pt -P "
+        + D,
+        shell=True,
+    )
+# OR
+# curl -L -O --output-dir /glade/derecho/scratch/agupta/hugging_face_checkpoints https://huggingface.co/amangupta2/iccs_coupling_checkpoints/resolve/main/ann_cnn_1x1_global_global_era5_uvthetaw__train_epoch94.pt
+# curl -L -O --output-dir /glade/derecho/scratch/agupta/hugging_face_checkpoints https://huggingface.co/amangupta2/iccs_coupling_checkpoints/resolve/main/attnunet_era5_global_global_uvthetaw_mseloss_train_epoch119.pt
 
 # assumes ckpts stored in model_ckpt dir
 if model == "attention":
     PATH = f"/glade/derecho/scratch/agupta/hugging_face_checkpoints/attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{epoch}.pt"
 elif model == "ann" and stencil == 1:
     PATH = f"/glade/derecho/scratch/agupta/hugging_face_checkpoints/ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{epoch}.pt"
+
+
+# OR
+# curl -L -O --output-dir /glade/derecho/scratch/agupta/hugging_face_checkpoints https://huggingface.co/amangupta2/iccs_coupling_checkpoints/resolve/main/ann_cnn_1x1_global_global_era5_uvthetaw__train_epoch94.pt
+# curl -L -O --output-dir /glade/derecho/scratch/agupta/hugging_face_checkpoints https://huggingface.co/amangupta2/iccs_coupling_checkpoints/resolve/main/attnunet_era5_global_global_uvthetaw_mseloss_train_epoch119.pt
 
 # eventually we will not need the files above. Just reading from the netCDF directly right now
 
