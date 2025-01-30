@@ -283,6 +283,8 @@ class Dataset_AttentionUNet(torch.utils.data.Dataset):
         self.features = features
         self.inp = self.ds["features"]
         self.out = self.ds["output"]
+        self.lat = self.ds["lat"]
+        self.lon = self.ds["lon"]
 
         self.nt = len(self.ds.time)
 
