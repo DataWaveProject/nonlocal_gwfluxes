@@ -139,7 +139,7 @@ lr_max = 9e-4
 if model_type == "ann":
     dropout = 0.1
 elif model_type == "attention":
-    dropout = 0.05
+    dropout = 0.1
 ckpt_epoch = args.epoch  # sys.argv[5]
 if model_type == "ann":
     PATH = (

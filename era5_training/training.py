@@ -114,10 +114,10 @@ lr_min = 1e-4
 lr_max = 5e-4
 # ----------------------
 if stencil == 1:
-    bs_train = 20
+    bs_train = 40
     bs_test = bs_train
 else:
-    bs_train = 10
+    bs_train = 20
     bs_test = bs_train
 dropout = 0.1
 
