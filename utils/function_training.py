@@ -307,7 +307,7 @@ def Training_AttentionUNet(
     return model, LOSS_TRAIN, LOSS_TEST
 
 
-def Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device, logger, outfile):
+def Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device, outfile):
     # ---------------------------------------------------------------------------------------
     idim = testset.idim
     odim = testset.odim

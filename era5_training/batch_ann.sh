@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#PBS -N 3x3_uvw
+#PBS -N 1x1_uvthw
 #PBS -A USTN0009
 #PBS -l select=1:ncpus=4:ngpus=1:mem=80GB
 #PBS -l walltime=01:00:00
@@ -20,31 +20,31 @@ source ~/nonlocal_gwfluxes/.nlgw/bin/activate
 # 5x5_G4 means 5x5 stencil, global, and four features: uvthetaw
 
 # TRAINING
-stencil=3
+#stencil=3
 # Usage: python training.py <domain> <vertical> <features> <stencil> <input_file_dir> <torch_model_dir>
-python training.py \
-	-M ann \
-	-d global  \
-	-v stratosphere_update \
-	-f uvw \
-	-s $stencil  \
-	-t era5 \
-	-i /glade/derecho/scratch/agupta/era5_training_data/ \
-	-o /glade/derecho/scratch/agupta/torch_saved_models/ 
-
-
-#python inference.py \
+#python training.py \
 #	-M ann \
-#	-d global \
+#	-d global  \
 #	-v stratosphere_update \
-#	-f uvtheta \
-#	-e 100 \
-#	-m 1 \ 
-#	-s 1 \
+#	-f uvw \
+#	-s $stencil  \
 #	-t era5 \
 #	-i /glade/derecho/scratch/agupta/era5_training_data/ \
-#	-c /glade/derecho/scratch/agupta/torch_saved_models/ \
-#	-o /glade/derecho/scratch/agupta/gw_inference_files/
+#	-o /glade/derecho/scratch/agupta/torch_saved_models/ 
+
+
+python inference.py \
+	-M attention \
+	-d global \
+	-v global \
+	-f uvthetaw \
+	-e 119 \
+	-m 1 \
+	-s 3 \
+	-t era5 \
+	-i /glade/derecho/scratch/agupta/era5_training_data/ \
+	-c /glade/derecho/scratch/agupta/hugging_face_checkpoints/ \
+	-o /glade/derecho/scratch/agupta/gw_inference_files/
 
 
 

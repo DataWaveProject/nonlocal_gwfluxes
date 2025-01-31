@@ -102,7 +102,7 @@ print(f"input_dir={args.input_dir}")
 print(f"output_dir={args.output_dir}")
 
 
-bs_train = 40  # 80 (80 works for most). (does not work for global uvthetaw)
+bs_train = 20  # 80 (80 works for most). (does not work for global uvthetaw)
 bs_test = bs_train
 
 # --------------------------------------------------
@@ -110,7 +110,7 @@ model = args.model
 domain = args.horizontal
 vertical = args.vertical
 features = args.features  # sys.argv[2]  #'uvthetaw' # 'uvtheta', ''uvthetaw', or 'uvw' for troposphere | additionally 'uvthetaN2' and 'uvthetawN2' for stratosphere_only
-dropout = 0
+dropout = 0.0
 epoch = args.epoch
 stencil = args.stencil
 teston = args.teston
@@ -238,7 +238,7 @@ if model == "ann":
 
     # better to create the file within the inference_and_save function
     logger.info("Initiating inference")
-    Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, stencil, logger, out)
+    Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, stencil, out)
 
 elif model == "attention":
     testset = Dataset_AttentionUNet(
@@ -275,6 +275,6 @@ elif model == "attention":
 
     # better to create the file within the inference_and_save function
     logger.info("Initiating inference")
-    Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device, logger, out)
+    Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device, out)
 
 logger.info("Inference complete")

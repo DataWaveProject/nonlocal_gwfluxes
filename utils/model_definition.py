@@ -13,7 +13,7 @@ class ANN_CNN(nn.Module):
         self.hdim = hdim
         self.dropout_prob = dropout
         self.stencil = stencil
-        self.fac = np.floor(0.5 * self.stencil)
+        self.fac = int(np.floor(0.5 * self.stencil))
 
         # assume normalized data as input
         # same activation for all layers
@@ -344,7 +344,7 @@ class ANN_CNN10(nn.Module):
         self.hdim = hdim
         self.dropout_prob = dropout
         self.stencil = stencil
-        self.fac = np.floor(0.5 * self.stencil)
+        self.fac = int(np.floor(0.5 * self.stencil))
 
         # assume normalized data as input
         # same activation for all layers
