@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 
 class ANN_CNN(nn.Module):
-    def __init__(self, idim, odim, hdim, stencil, dropout=0):
+    def __init__(self, idim, odim, hdim, stencil, dropout=0.0):
         super().__init__()
 
         self.idim = idim
@@ -221,7 +221,7 @@ class Attention_block(nn.Module):
 
 
 class Attention_UNet(nn.Module):
-    def __init__(self, ch_in, ch_out, dropout=0.2):
+    def __init__(self, ch_in, ch_out, dropout=0.0):
         super().__init__()
 
         self.ch_in = ch_in
@@ -336,7 +336,7 @@ class Attention_UNet(nn.Module):
 
 
 class ANN_CNN10(nn.Module):
-    def __init__(self, idim, odim, hdim, stencil, dropout=0):
+    def __init__(self, idim, odim, hdim, stencil, dropout=0.0):
         super().__init__()
 
         self.idim = idim
