@@ -7,6 +7,9 @@ import torch.optim as optim
 from netCDF4 import Dataset
 import logging
 
+import xarray as xr
+from pt2ts import trace_to_torchscript, script_to_torchscript
+
 logger = logging.getLogger(__name__)
 
 
@@ -188,6 +191,22 @@ def Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, sten
             T = OUT.shape
             OUT = OUT.reshape(T[0] * T[1], -1)
         PRED = model(INP)
+
+        print("saving data...")
+        data = {
+            "input": INP,
+            "predict": PRED,
+        }
+        for k, v in data.items():
+            xdata = xr.DataArray(v.detach().cpu().numpy())
+            xdata.to_netcdf(f"test-data/ann-cnn-{k}.nc")
+
+        # print("tracing...")
+        # dummy_inputs = torch.tensor(np.ones(INP.shape, dtype=np.float32)).to(device)
+        # trace_to_torchscript(model, dummy_input=dummy_inputs, filename="nlgw_ann_gpu_traced.pt")
+        print("scripting...")
+        script_to_torchscript(model, filename="nlgw_ann_gpu_scripted.pt")
+        print("complete")
 
         S = PRED.shape
         # print(f'S[0]:{S[0]}, S[0]/(nx*ny) = {S[0]/(nx*ny)}')
@@ -376,6 +395,23 @@ def Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device
         if count == 0:
             logger.info(f"Minibatch={i}, count={count}, output shape={S}")
         PRED = model(INP)
+
+        print("saving data...")
+        data = {
+            "input": INP,
+            "predict": PRED,
+        }
+        for k, v in data.items():
+            xdata = xr.DataArray(v.detach().cpu().numpy())
+            xdata.to_netcdf(f"test-data/unet-{k}.nc")
+
+        # print("tracing...")
+        # dummy_inputs = torch.tensor(np.ones(INP.shape, dtype=np.float32)).to(device)
+        # trace_to_torchscript(model, dummy_input=dummy_inputs, filename="nlgw_unet_gpu_traced.pt")
+        print("scripting...")
+        script_to_torchscript(model, filename="nlgw_unet_gpu_scripted.pt")
+        print("complete")
+
         # write to netCDF
         if device != "cpu":
             # print('Writing')
