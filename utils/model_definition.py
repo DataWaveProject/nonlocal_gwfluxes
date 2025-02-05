@@ -71,11 +71,13 @@ class ANN_CNN(nn.Module):
         self.output = nn.Linear(2 * odim, odim)
 
     def forward(self, x):
-        if self.fac == 1:
-            x = torch.squeeze(self.dropout0(self.act_cnn(self.conv1(x))))
-        elif self.fac == 2:
-            x = torch.squeeze(self.dropout0(self.act_cnn(self.conv1(x))))
-            x = torch.squeeze(self.dropout0_2(self.act_cnn2(self.conv2(x))))
+        if not torch.jit.is_scripting():
+            # ignore this branch of code if torch is scripting
+            if self.fac == 1:
+                x = torch.squeeze(self.dropout0(self.act_cnn(self.conv1(x))))
+            elif self.fac == 2:
+                x = torch.squeeze(self.dropout0(self.act_cnn(self.conv1(x))))
+                x = torch.squeeze(self.dropout0_2(self.act_cnn2(self.conv2(x))))
 
         # print(f'new shape: {x.shape}')
         x = self.dropout(self.act1(self.layer1(x)))
