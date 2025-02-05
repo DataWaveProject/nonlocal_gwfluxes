@@ -150,7 +150,7 @@ if device != "cpu":
 # Define test files
 # ------- To test on one year of ERA5 data
 test_files = []
-test_years = np.array([2015])
+test_years = np.array([2010])
 test_month = args.month  # int(sys.argv[4])  # np.arange(1,13)
 logger.info(f"Inference for month {test_month}")
 if teston == "era5":
