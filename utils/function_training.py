@@ -205,7 +205,7 @@ def Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, sten
         # dummy_inputs = torch.tensor(np.ones(INP.shape, dtype=np.float32)).to(device)
         # trace_to_torchscript(model, dummy_input=dummy_inputs, filename="nlgw_ann_gpu_traced.pt")
         print("scripting...")
-        script_to_torchscript(model, filename="nlgw_ann_gpu_scripted.pt")
+        script_to_torchscript(model, filename="nlgw_ann-cnn_gpu_scripted.pt")
         print("complete")
 
         S = PRED.shape
