@@ -69,7 +69,7 @@ program infer
     call torch_tensor_from_array(output_tensor(1), prediction_2d, layout_2d, torch_kCPU)
 
     ! Load ML model
-    call torch_model_load(model, trim(script_model_path) // "/nlgw_ann_gpu_scripted.pt", device_type=torch_kCUDA, device_index=0)
+    call torch_model_load(model, trim(script_model_path) // "/nlgw_ann-cnn_gpu_scripted.pt", device_type=torch_kCUDA, device_index=0)
 
     ! Infer
     do i = 1, num_loops
