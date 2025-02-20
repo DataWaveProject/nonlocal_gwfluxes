@@ -86,7 +86,7 @@ python infer.py -M ann -t test-data/ -s .
 To test the newly generate torchscript models, use the following command:
 
 ```bash
-bash compile-and-run.sh
+bash compile-and-run.sh intel
 ```
 
 This will compile `infer.f90` into `infer.exe`. This requires having cuda installed on your system. It also requires `ftorch` to
