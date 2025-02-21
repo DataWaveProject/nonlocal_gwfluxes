@@ -247,19 +247,19 @@ class Attention_UNet(nn.Module):
         self.conv5 = Conv_block(ch_in=512, ch_out=1024)
 
         self.up5 = Upsample(ch_in=1024, ch_out=512)
-        self.attn5 = Attention_block(F_x=512, F_g=512, F_int=256, attn_3d=False)
+        self.attn5 = Attention_block(F_x=512, F_g=512, F_int=256, attn_3d=attn_3d)
         self.upconv5 = Conv_block(ch_in=1024, ch_out=512)
 
         self.up4 = Upsample(ch_in=512, ch_out=256)
-        self.attn4 = Attention_block(F_x=256, F_g=256, F_int=128, attn_3d=False)
+        self.attn4 = Attention_block(F_x=256, F_g=256, F_int=128, attn_3d=attn_3d)
         self.upconv4 = Conv_block(ch_in=512, ch_out=256)
 
         self.up3 = Upsample(ch_in=256, ch_out=128)
-        self.attn3 = Attention_block(F_x=128, F_g=128, F_int=64, attn_3d=False)
+        self.attn3 = Attention_block(F_x=128, F_g=128, F_int=64, attn_3d=attn_3d)
         self.upconv3 = Conv_block(ch_in=256, ch_out=128)
 
         self.up2 = Upsample(ch_in=128, ch_out=64)
-        self.attn2 = Attention_block(F_x=64, F_g=64, F_int=32, attn_3d=False)
+        self.attn2 = Attention_block(F_x=64, F_g=64, F_int=32, attn_3d=attn_3d)
         self.upconv2 = Conv_block(ch_in=128, ch_out=64)
 
         self.conv1x1 = nn.Conv2d(
