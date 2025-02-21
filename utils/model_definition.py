@@ -171,7 +171,14 @@ class Upsample(nn.Module):
 
 
 class Attention_block(nn.Module):
-    def __init__(self, F_x, F_g, F_int, kernel_size=3, stride=1, padding=1, bias=True):
+    def __init__(
+        self, F_x, F_g, F_int, kernel_size=3, stride=1, padding=1, bias=True, attn_3d=False
+    ):
+        if attn_3d:
+            self.F_attn = F_x
+        else:
+            self.F_attn = 1
+
         super().__init__()
         self.Wx = nn.Sequential(
             nn.Conv2d(
@@ -200,13 +207,13 @@ class Attention_block(nn.Module):
         self.Psi = nn.Sequential(
             nn.Conv2d(
                 in_channels=F_int,
-                out_channels=1,
+                out_channels=self.F_attn,
                 kernel_size=kernel_size,
                 padding=padding,
                 stride=stride,
                 bias=bias,
             ),
-            nn.BatchNorm2d(1),
+            nn.BatchNorm2d(self.F_attn),
             nn.Sigmoid(),
         )
 
@@ -221,7 +228,7 @@ class Attention_block(nn.Module):
 
 
 class Attention_UNet(nn.Module):
-    def __init__(self, ch_in, ch_out, dropout=0.0):
+    def __init__(self, ch_in, ch_out, dropout=0.0, attn_3d=False):
         super().__init__()
 
         self.ch_in = ch_in
@@ -240,19 +247,19 @@ class Attention_UNet(nn.Module):
         self.conv5 = Conv_block(ch_in=512, ch_out=1024)
 
         self.up5 = Upsample(ch_in=1024, ch_out=512)
-        self.attn5 = Attention_block(F_x=512, F_g=512, F_int=256)
+        self.attn5 = Attention_block(F_x=512, F_g=512, F_int=256, attn_3d=False)
         self.upconv5 = Conv_block(ch_in=1024, ch_out=512)
 
         self.up4 = Upsample(ch_in=512, ch_out=256)
-        self.attn4 = Attention_block(F_x=256, F_g=256, F_int=128)
+        self.attn4 = Attention_block(F_x=256, F_g=256, F_int=128, attn_3d=False)
         self.upconv4 = Conv_block(ch_in=512, ch_out=256)
 
         self.up3 = Upsample(ch_in=256, ch_out=128)
-        self.attn3 = Attention_block(F_x=128, F_g=128, F_int=64)
+        self.attn3 = Attention_block(F_x=128, F_g=128, F_int=64, attn_3d=False)
         self.upconv3 = Conv_block(ch_in=256, ch_out=128)
 
         self.up2 = Upsample(ch_in=128, ch_out=64)
-        self.attn2 = Attention_block(F_x=64, F_g=64, F_int=32)
+        self.attn2 = Attention_block(F_x=64, F_g=64, F_int=32, attn_3d=False)
         self.upconv2 = Conv_block(ch_in=128, ch_out=64)
 
         self.conv1x1 = nn.Conv2d(
