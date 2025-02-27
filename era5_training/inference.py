@@ -87,6 +87,12 @@ parser.add_argument("-c", "--ckpt_dir", default=Path.cwd(), help="Checkpoint dir
 parser.add_argument(
     "-o", "--output_dir", default=Path.cwd(), help="Output directory to save outputs", type=Path
 )
+parser.add_argument(
+    "--script",
+    default=False,
+    action=argparse.BooleanOptionalAction,
+    help="Run in scripting mode. This will save a torchscript version of the model as well as inputs/outputs needed to verify it.",
+)
 args = parser.parse_args()
 
 # print parsed args
@@ -100,7 +106,7 @@ print(f"month={args.month}")
 print(f"checkpoint_dir={args.ckpt_dir}")
 print(f"input_dir={args.input_dir}")
 print(f"output_dir={args.output_dir}")
-
+print(f"script={args.script}")
 
 bs_train = 20  # 80 (80 works for most). (does not work for global uvthetaw)
 bs_test = bs_train
@@ -114,6 +120,7 @@ dropout = 0.0
 epoch = args.epoch
 stencil = args.stencil
 teston = args.teston
+is_script = args.script
 
 # ----- model sanity check ----------
 if model == "attention" and stencil > 1:
@@ -238,7 +245,7 @@ if model == "ann":
 
     # better to create the file within the inference_and_save function
     logger.info("Initiating inference")
-    Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, stencil, out)
+    Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, stencil, out, is_script)
 
 elif model == "attention":
     testset = Dataset_AttentionUNet(
@@ -275,6 +282,6 @@ elif model == "attention":
 
     # better to create the file within the inference_and_save function
     logger.info("Initiating inference")
-    Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device, out)
+    Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device, out, is_script)
 
 logger.info("Inference complete")
