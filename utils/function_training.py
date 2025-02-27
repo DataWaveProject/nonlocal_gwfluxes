@@ -118,7 +118,9 @@ def Training_ANN_CNN(
     return model, LOSS_TRAIN, LOSS_TEST
 
 
-def Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, stencil, outfile):
+def Inference_and_Save_ANN_CNN(
+    model, testset, testloader, bs_test, device, stencil, outfile, is_script=False
+):
     # ---------------------------------------------------------------------------------------
     idim = testset.idim
     odim = testset.odim
@@ -192,21 +194,19 @@ def Inference_and_Save_ANN_CNN(model, testset, testloader, bs_test, device, sten
             OUT = OUT.reshape(T[0] * T[1], -1)
         PRED = model(INP)
 
-        print("saving data...")
-        data = {
-            "input": INP,
-            "predict": PRED,
-        }
-        for k, v in data.items():
-            xdata = xr.DataArray(v.detach().cpu().numpy())
-            xdata.to_netcdf(f"test-data/ann-cnn-{k}.nc")
+        if is_script:
+            print("saving data...")
+            data = {
+                "input": INP,
+                "predict": PRED,
+            }
+            for k, v in data.items():
+                xdata = xr.DataArray(v.detach().cpu().numpy())
+                xdata.to_netcdf(f"test-data/ann-cnn-{k}.nc")
 
-        # print("tracing...")
-        # dummy_inputs = torch.tensor(np.ones(INP.shape, dtype=np.float32)).to(device)
-        # trace_to_torchscript(model, dummy_input=dummy_inputs, filename="nlgw_ann_gpu_traced.pt")
-        print("scripting...")
-        script_to_torchscript(model, filename="nlgw_ann-cnn_gpu_scripted.pt")
-        print("complete")
+            print("scripting...")
+            script_to_torchscript(model, filename="nlgw_ann-cnn_gpu_scripted.pt")
+            print("complete")
 
         S = PRED.shape
         # print(f'S[0]:{S[0]}, S[0]/(nx*ny) = {S[0]/(nx*ny)}')
@@ -326,7 +326,9 @@ def Training_AttentionUNet(
     return model, LOSS_TRAIN, LOSS_TEST
 
 
-def Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device, outfile):
+def Inference_and_Save_AttentionUNet(
+    model, testset, testloader, bs_test, device, outfile, is_script=False
+):
     # ---------------------------------------------------------------------------------------
     idim = testset.idim
     odim = testset.odim
@@ -396,21 +398,19 @@ def Inference_and_Save_AttentionUNet(model, testset, testloader, bs_test, device
             logger.info(f"Minibatch={i}, count={count}, output shape={S}")
         PRED = model(INP)
 
-        print("saving data...")
-        data = {
-            "input": INP,
-            "predict": PRED,
-        }
-        for k, v in data.items():
-            xdata = xr.DataArray(v.detach().cpu().numpy())
-            xdata.to_netcdf(f"test-data/unet-{k}.nc")
+        if is_script:
+            print("saving data...")
+            data = {
+                "input": INP,
+                "predict": PRED,
+            }
+            for k, v in data.items():
+                xdata = xr.DataArray(v.detach().cpu().numpy())
+                xdata.to_netcdf(f"test-data/unet-{k}.nc")
 
-        # print("tracing...")
-        # dummy_inputs = torch.tensor(np.ones(INP.shape, dtype=np.float32)).to(device)
-        # trace_to_torchscript(model, dummy_input=dummy_inputs, filename="nlgw_unet_gpu_traced.pt")
-        print("scripting...")
-        script_to_torchscript(model, filename="nlgw_unet_gpu_scripted.pt")
-        print("complete")
+            print("scripting...")
+            script_to_torchscript(model, filename="nlgw_unet_gpu_scripted.pt")
+            print("complete")
 
         # write to netCDF
         if device != "cpu":
