@@ -51,7 +51,7 @@ test-data/
 ### Ann
 
 ```bash
-python inference.py -M ann -d global -v global -f uvthetaw -e 8 -m 1 -s 1 -t era5 -i inputs/ -c model-huggingface/ -o outputs/ --script
+python inference.py -M ann -d global -v global -f uvthetaw -e 45 -m 1 -s 1 -t era5 -i inputs/ -c model-huggingface/ -o outputs/ --script
 ```
 
 This will generate some test data and a torchscripted model, to be used by `infer.f90` and `infer.py` later on.
@@ -86,7 +86,7 @@ python infer.py -M ann -t test-data/ -s .
 To test the newly generate torchscript models, use the following command:
 
 ```bash
-bash compile-and-run.sh intel
+bash compile-and-run.sh gcc
 ```
 
 This will compile `infer.f90` into `infer.exe`. This requires having cuda installed on your system. It also requires `ftorch` to
