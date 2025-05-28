@@ -157,7 +157,7 @@ if device != "cpu":
 # Define test files
 # ------- To test on one year of ERA5 data
 test_files = []
-test_years = np.array([2010])
+test_years = np.array([2015])
 test_month = args.month  # int(sys.argv[4])  # np.arange(1,13)
 logger.info(f"Inference for month {test_month}")
 if teston == "era5":
@@ -231,6 +231,11 @@ if model == "ann":
     # ---- load model
     PATH = pref + ckpt
     checkpoint = torch.load(PATH, map_location=torch.device(device))
+
+    state_dict = checkpoint["model_state_dict"]
+    filtered_state_dict = {k: v for k, v in state_dict.items() if "bnorm" not in k}
+    model.load_state_dict(filtered_state_dict, strict=False)
+
     model.load_state_dict(checkpoint["model_state_dict"])
     model = model.to(device)
     model.eval()
