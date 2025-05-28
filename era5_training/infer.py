@@ -26,7 +26,8 @@ def main():
     model = torch.jit.load(model_path)
 
     # run model inference
-    pred = model(torch.tensor(input_data).to(device))
+    with torch.no_grad():
+        pred = model(torch.tensor(input_data).to(device))
 
     pred = pred.cpu().detach().numpy()
     print("pred.shape = ", pred.shape)
