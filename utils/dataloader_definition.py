@@ -53,10 +53,10 @@ class Dataset_ANN_CNN(torch.utils.data.Dataset):
             if self.features == "uvtheta":
                 self.v = np.arange(0, 369)  # for u,v,theta
             elif self.features == "uvthetaw":
-                self.v = np.arange(0, 491)  # for u,v,theta,w
+                self.v = np.arange(0, 551)  # for u,v,theta,w
             elif self.features == "uvw":
                 self.v = np.concatenate(
-                    (np.arange(0, 247), np.arange(369, 491)), axis=0
+                    (np.arange(0, 247), np.arange(369, 551)), axis=0
                 )  # for u,v,w
             self.w = np.arange(0, self.odim)  # all vertical channels
 
@@ -86,7 +86,7 @@ class Dataset_ANN_CNN(torch.utils.data.Dataset):
                 self.v = np.arange(0, 491)  # for u,v,theta,w
             elif self.features == "uvw":
                 self.v = np.concatenate(
-                    (np.arange(0, 247), np.arange(369, 491)), axis=0
+                    (np.arange(0, 247), np.arange(369, 551)), axis=0
                 )  # for u,v,w
             self.w = np.concatenate(
                 (np.arange(0, 60), np.arange(122, 182)), axis=0
@@ -298,10 +298,10 @@ class Dataset_AttentionUNet(torch.utils.data.Dataset):
             if self.features == "uvtheta":
                 self.v = np.arange(3, 369)  # for u,v,theta
             elif self.features == "uvthetaw":
-                self.v = np.arange(3, 491)  # for u,v,theta,w
+                self.v = np.arange(3, 551)  # for u,v,theta,w
             elif self.features == "uvw":
                 self.v = np.concatenate(
-                    (np.arange(3, 247), np.arange(369, 491)), axis=0
+                    (np.arange(3, 247), np.arange(369, 551)), axis=0
                 )  # for u,v,w
             self.w = np.arange(0, self.odim)  # all vertical channels
 
@@ -328,10 +328,10 @@ class Dataset_AttentionUNet(torch.utils.data.Dataset):
             if self.features == "uvtheta":
                 self.v = np.arange(3, 369)  # for u,v,theta
             elif self.features == "uvthetaw":
-                self.v = np.arange(3, 491)  # for u,v,theta,w
+                self.v = np.arange(3, 551)  # for u,v,theta,w
             elif self.features == "uvw":
                 self.v = np.concatenate(
-                    (np.arange(3, 247), np.arange(369, 491)), axis=0
+                    (np.arange(3, 247), np.arange(369, 551)), axis=0
                 )  # for u,v,w
             self.w = np.concatenate(
                 (np.arange(0, 60), np.arange(122, 182)), axis=0
