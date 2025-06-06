@@ -47,27 +47,43 @@ class ANN_CNN(nn.Module):
             self.act_cnn = nn.ReLU()
             self.dropout0 = nn.Dropout(p=0.5 * self.dropout_prob)
 
+        self.dropout0 = nn.Dropout(p=0.5 * self.dropout_prob)
         # can define a block and divide it into blocks as well
         self.layer1 = nn.Linear(idim, hdim)  # ,dtype=torch.float16)
-        self.act1 = nn.LeakyReLU()
-
+        self.act1 = (
+            nn.LeakyReLU()
+        )  # nn.Tanh()#nn.LeakyReLU()#nn.Tanh()#nn.LeakyReLU()#nn.Tanh()#nn.GELU()#nn.ReLU()
+        self.bnorm1 = nn.BatchNorm1d(hdim)
         self.dropout = nn.Dropout(p=self.dropout_prob)
-
         self.layer2 = nn.Linear(hdim, hdim)
-        self.act2 = nn.LeakyReLU()
+        self.act2 = (
+            nn.LeakyReLU()
+        )  # nn.Tanh()#nn.LeakyReLU()#nn.Tanh()#nn.LeakyReLU()#nn.Tanh()#nn.GELU()#nn.ReLU()
+        self.bnorm2 = nn.BatchNorm1d(hdim)
         # -------------------------------------------------------
         self.layer3 = nn.Linear(hdim, hdim)
-        self.act3 = nn.LeakyReLU()
+        self.act3 = (
+            nn.LeakyReLU()
+        )  # nn.Tanh()#nn.LeakyReLU()#nn.Tanh()#nn.LeakyReLU()#nn.Tanh()#nn.GELU()#nn.ReLU()
+        self.bnorm3 = nn.BatchNorm1d(hdim)
         # -------------------------------------------------------
         self.layer4 = nn.Linear(hdim, hdim)
-        self.act4 = nn.LeakyReLU()
+        self.act4 = (
+            nn.LeakyReLU()
+        )  # nn.Tanh()#nn.LeakyReLU()#nn.Tanh()#nn.LeakyReLU()#nn.Tanh()#nn.GELU()#nn.ReLU()
+        self.bnorm4 = nn.BatchNorm1d(2 * hdim)
         # --------------------------------------------------------
         self.layer5 = nn.Linear(hdim, hdim)
-        self.act5 = nn.LeakyReLU()
+        self.act5 = (
+            nn.LeakyReLU()
+        )  # nn.Tanh()#nn.LeakyReLU()#nn.Tanh()#nn.LeakyReLU()#nn.Tanh()#nn.GELU()#nn.ReLU()
+        self.bnorm5 = nn.BatchNorm1d(hdim)
         # -------------------------------------------------------
         self.layer6 = nn.Linear(hdim, 2 * odim)
-        self.act6 = nn.LeakyReLU()
-
+        self.act6 = (
+            nn.LeakyReLU()
+        )  # nn.Tanh()#nn.LeakyReLU()#nn.Tanh()#nn.LeakyReLU()#nn.Tanh()#nn.GELU()#nn.ReLU()
+        self.bnorm6 = nn.BatchNorm1d(2 * odim)
         self.output = nn.Linear(2 * odim, odim)
 
     def forward(self, x):

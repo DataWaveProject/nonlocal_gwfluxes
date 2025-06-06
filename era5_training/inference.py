@@ -232,12 +232,7 @@ if model == "ann":
     # ---- load model
     PATH = pref + ckpt
     checkpoint = torch.load(PATH, map_location=torch.device(device))
-
-    state_dict = checkpoint["model_state_dict"]
-    filtered_state_dict = {k: v for k, v in state_dict.items() if "bnorm" not in k}
-    model.load_state_dict(filtered_state_dict, strict=False)
-
-    # model.load_state_dict(checkpoint["model_state_dict"])
+    model.load_state_dict(checkpoint["model_state_dict"])
     model = model.to(device)
     model.eval()
 
