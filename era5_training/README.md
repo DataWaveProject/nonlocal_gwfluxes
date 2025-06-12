@@ -51,7 +51,7 @@ test-data/
 ### Ann
 
 ```bash
-python inference.py -M ann -d global -v global -f uvthetaw -e 45 -m 1 -s 1 -t era5 -i inputs/ -c model-huggingface/ -o outputs/ --script
+python inference.py -M ann -d global -v global -f uvthetaw -e 85 -m 1 -s 1 -t era5 -i inputs/ -c model-huggingface/ -o outputs/ --script
 ```
 
 This will generate some test data and a torchscripted model, to be used by `infer.f90` and `infer.py` later on.
