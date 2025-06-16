@@ -207,7 +207,7 @@ def Inference_and_Save_ANN_CNN(
                 xdata.to_netcdf(f"test-data/ann-cnn-{k}.nc")
 
             print("scripting...")
-            script_to_torchscript(model, filename="nlgw_ann-cnn_gpu_scripted.pt")
+            script_to_torchscript(model, filename=f"nlgw_ann-cnn_{device}_scripted.pt")
             print("complete")
 
         S = PRED.shape
