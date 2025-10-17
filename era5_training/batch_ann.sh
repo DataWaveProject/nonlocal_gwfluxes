@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#PBS -N 1x1_uvthw
+#PBS -N scripting
 #PBS -A USTN0009
 #PBS -l select=1:ncpus=4:ngpus=1:mem=80GB
 #PBS -l walltime=01:00:00
@@ -33,19 +33,36 @@ source ~/nonlocal_gwfluxes/.nlgw/bin/activate
 #	-o /glade/derecho/scratch/agupta/torch_saved_models/ 
 
 
-python inference.py \
-	-M attention \
-	-d global \
-	-v global \
-	-f uvthetaw \
-	-e 119 \
-	-m 1 \
-	-s 3 \
-	-t era5 \
-	-i /glade/derecho/scratch/agupta/era5_training_data/ \
-	-c /glade/derecho/scratch/agupta/hugging_face_checkpoints/ \
-	-o /glade/derecho/scratch/agupta/gw_inference_files/
+#python inference.py \
+#	-M attention \
+#	-d global \
+#	-v global \
+#	-f uvthetaw \
+#	-e 119 \
+#	-m 1 \
+#	-s 3 \
+#	-t era5 \
+#	-i /glade/derecho/scratch/agupta/era5_training_data/ \
+#	-c /glade/derecho/scratch/agupta/hugging_face_checkpoints/ \
+#	-o /glade/derecho/scratch/agupta/gw_inference_files/
 
+
+python inference.py \
+        -M ann \
+        -d global  \
+        -v global \
+        -f uvthetaw \
+        -e 70 \
+        -s 1 \
+        -t era5 \
+        -m 1 \
+        -i inputs/ \
+        -c model-huggingface/ \
+        -o outputs/ \
+        --script
+
+
+#python inference.py -M ann -d global -v global -f uvthetaw -e 85 -m 1 -s 1 -t era5 -i /glade/derecho/scratch/agupta/new_training_data/ -c /glade/derecho/scratch/agupta/hugging_face_checkpoints/ -o /glade/derecho/scratch/agupta/gw_inference_files/ --script
 
 
 
