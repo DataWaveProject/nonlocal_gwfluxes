@@ -51,13 +51,16 @@ class Dataset_ANN_CNN(torch.utils.data.Dataset):
         if self.vertical == "global":
             # 122 channels for each feature
             if self.features == "uvtheta":
-                self.v = np.arange(0, 369)  # for u,v,theta
+                # self.v = np.arange(0, 369)  # for u,v,theta
+                self.v = np.arange(0, 282)  # for L93
             elif self.features == "uvthetaw":
-                self.v = np.arange(0, 551)  # for u,v,theta,w
+                # self.v = np.arange(0, 551)  # for u,v,theta,w
+                self.v = np.arange(0, 375)  # for L93
             elif self.features == "uvw":
-                self.v = np.concatenate(
-                    (np.arange(0, 247), np.arange(369, 551)), axis=0
-                )  # for u,v,w
+                # self.v = np.concatenate(
+                # (np.arange(0, 247), np.arange(369, 551)), axis=0
+                # )  # for u,v,w
+                self.v = np.concatenate((np.arange(0, 189), np.arange(282, 375)), axis=0)  # for L93
             self.w = np.arange(0, self.odim)  # all vertical channels
 
         elif self.vertical == "stratosphere_only":
@@ -296,13 +299,16 @@ class Dataset_AttentionUNet(torch.utils.data.Dataset):
         if self.vertical == "global":
             # 122 channels for each feature
             if self.features == "uvtheta":
-                self.v = np.arange(3, 369)  # for u,v,theta
+                self.v = np.arange(3, 282)  # for L93
+                # self.v = np.arange(3, 369)  # for u,v,theta
             elif self.features == "uvthetaw":
-                self.v = np.arange(3, 551)  # for u,v,theta,w
+                self.v = np.arange(3, 375)  # for L93
+                # self.v = np.arange(3, 551)  # for u,v,theta,w
             elif self.features == "uvw":
-                self.v = np.concatenate(
-                    (np.arange(3, 247), np.arange(369, 551)), axis=0
-                )  # for u,v,w
+                self.v = np.concatenate((np.arange(3, 189), np.arange(282, 375)), axis=0)  # for L93
+                # self.v = np.concatenate(
+                #    (np.arange(3, 247), np.arange(369, 551)), axis=0
+                # )  # for u,v,w
             self.w = np.arange(0, self.odim)  # all vertical channels
 
         elif self.vertical == "stratosphere_only":

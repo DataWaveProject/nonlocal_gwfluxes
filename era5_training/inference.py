@@ -108,7 +108,7 @@ print(f"input_dir={args.input_dir}")
 print(f"output_dir={args.output_dir}")
 print(f"script={args.script}")
 
-bs_train = 20  # 80 (80 works for most). (does not work for global uvthetaw)
+bs_train = 5  # 20  # 80 (80 works for most). (does not work for global uvthetaw)
 bs_test = bs_train
 
 # --------------------------------------------------
@@ -136,11 +136,13 @@ idir = str(args.input_dir) + "/"
 odir = str(args.output_dir) + "/"
 pref = str(args.ckpt_dir) + "/"  # "/scratch/users/ag4680/torch_saved_models/attention_unet/"
 if model == "ann":
-    ckpt = f"ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{epoch}.pt"
+    # ckpt = f"retrained_ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{epoch}.pt"
+    ckpt = f"retrained_L93_ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{epoch}.pt"
     log_filename = f"./{teston}_inference_ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_{features}_ckpt_epoch_{epoch}.txt"
 elif model == "attention":
     ckpt = (
-        f"attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{str(epoch).zfill(2)}.pt"
+        # f"attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{str(epoch).zfill(2)}.pt"
+        f"retrained_L93_attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{epoch}.pt"
     )
     log_filename = (
         f"./{teston}_inference_attnunet_{domain}_{vertical}_{features}_ckpt_epoch_{epoch}.txt"
@@ -174,7 +176,7 @@ if teston == "era5":
             )
     elif vertical == "global" or vertical == "stratosphere_update":
         if stencil == 1:
-            pre = idir + f"1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_"
+            pre = idir + f"1x1_inputfeatures_u_v_theta_w_uw_vw_gcp_era5_training_data_hourly_"
         else:
             pre = (
                 idir
@@ -183,7 +185,10 @@ if teston == "era5":
 
     for year in test_years:
         for months in np.arange(test_month, test_month + 1):
-            test_files.append(f"{pre}{year}_constant_mu_sigma_scaling{str(months).zfill(2)}.nc")
+            # test_files.append(f"{pre}{year}_constant_mu_sigma_scaling{str(months).zfill(2)}.nc") # usual
+            test_files.append(
+                f"{pre}{year}_L93_constant_mu_sigma_scaling{str(months).zfill(2)}.nc"
+            )  # L93
 
 elif teston == "ifs":
     if vertical == "stratosphere_only":
