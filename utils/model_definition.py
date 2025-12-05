@@ -138,8 +138,8 @@ class ANN_CNN(nn.Module):
 class Conv_block(nn.Module):
     def __init__(self, ch_in, ch_out, kernel_size=3, stride=1, padding=1, bias=True):
         super().__init__()
-        
-        if padding > 0: 
+
+        if padding > 0:
             # pad width dimension circularly
             pad_layer = nn.CircularPad2d((padding, padding, 0, 0))
             # pad height dimension with zeros (height, width)
@@ -161,7 +161,6 @@ class Conv_block(nn.Module):
             ),
             nn.BatchNorm2d(ch_out),
             nn.ReLU(inplace=True),
-
             pad_layer,
             nn.Conv2d(
                 in_channels=ch_out,
@@ -184,7 +183,7 @@ class Upsample(nn.Module):
     def __init__(self, ch_in, ch_out, kernel_size=3, stride=1, padding=1, bias=True):
         super().__init__()
 
-        if padding > 0: 
+        if padding > 0:
             pad_layer = nn.CircularPad2d((padding, padding, 0, 0))
             conv_padding = (padding, 0)
         else:
@@ -221,8 +220,7 @@ class Attention_block(nn.Module):
         else:
             self.F_attn = 1
 
-
-        if padding > 0: 
+        if padding > 0:
             # pad width dimension circularly
             pad_layer = nn.CircularPad2d((padding, padding, 0, 0))
             # pad height dimension with zeros (height, width)
