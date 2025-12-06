@@ -138,23 +138,31 @@ class ANN_CNN(nn.Module):
 class Conv_block(nn.Module):
     def __init__(self, ch_in, ch_out, kernel_size=3, stride=1, padding=1, bias=True):
         super().__init__()
+
+        pad_layer = nn.Sequential(
+            nn.CircularPad2d((padding, padding, 0, 0)),
+            nn.ReplicationPad2d((0, 0, padding, padding)),
+        )
+
         self.conv = nn.Sequential(
+            pad_layer,
             nn.Conv2d(
                 in_channels=ch_in,
                 out_channels=ch_out,
                 kernel_size=kernel_size,
                 stride=stride,
-                padding=padding,
+                padding=0,
                 bias=bias,
             ),
             nn.BatchNorm2d(ch_out),
             nn.ReLU(inplace=True),
+            pad_layer,
             nn.Conv2d(
                 in_channels=ch_out,
                 out_channels=ch_out,
                 kernel_size=kernel_size,
                 stride=stride,
-                padding=padding,
+                padding=0,
                 bias=bias,
             ),
             nn.BatchNorm2d(ch_out),
@@ -169,14 +177,21 @@ class Conv_block(nn.Module):
 class Upsample(nn.Module):
     def __init__(self, ch_in, ch_out, kernel_size=3, stride=1, padding=1, bias=True):
         super().__init__()
+
+        pad_layer = nn.Sequential(
+            nn.CircularPad2d((padding, padding, 0, 0)),
+            nn.ReplicationPad2d((0, 0, padding, padding)),
+        )
+
         self.up = nn.Sequential(
+            pad_layer,
             nn.Upsample(scale_factor=2),
             nn.Conv2d(
                 in_channels=ch_in,
                 out_channels=ch_out,
                 kernel_size=kernel_size,
-                padding=padding,
                 stride=stride,
+                padding=0,
                 bias=bias,
             ),
             nn.BatchNorm2d(ch_out),
@@ -192,43 +207,51 @@ class Attention_block(nn.Module):
     def __init__(
         self, F_x, F_g, F_int, kernel_size=3, stride=1, padding=1, bias=True, attn_3d=False
     ):
+        super().__init__()
         if attn_3d:
             self.F_attn = F_x
         else:
             self.F_attn = 1
 
-        super().__init__()
+        pad_layer = nn.Sequential(
+            nn.CircularPad2d((padding, padding, 0, 0)),
+            nn.ReplicationPad2d((0, 0, padding, padding)),
+        )
+
         self.Wx = nn.Sequential(
+            pad_layer,
             nn.Conv2d(
                 in_channels=F_x,
                 out_channels=F_int,
                 kernel_size=kernel_size,
                 stride=stride,
-                padding=padding,
+                padding=0,
                 bias=bias,
             ),
             nn.BatchNorm2d(F_int),
         )
 
         self.Wg = nn.Sequential(
+            pad_layer,
             nn.Conv2d(
                 in_channels=F_g,
                 out_channels=F_int,
                 kernel_size=kernel_size,
                 stride=stride,
-                padding=padding,
+                padding=0,
                 bias=bias,
             ),
             nn.BatchNorm2d(F_int),
         )
 
         self.Psi = nn.Sequential(
+            pad_layer,
             nn.Conv2d(
                 in_channels=F_int,
                 out_channels=self.F_attn,
                 kernel_size=kernel_size,
-                padding=padding,
                 stride=stride,
+                padding=0,
                 bias=bias,
             ),
             nn.BatchNorm2d(self.F_attn),
