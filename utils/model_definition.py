@@ -139,12 +139,11 @@ class Conv_block(nn.Module):
     def __init__(self, ch_in, ch_out, kernel_size=3, stride=1, padding=1, bias=True):
         super().__init__()
 
-        # pad width dimension circularly (left, right, top, bottom)
-        pad_layer = nn.CircularPad2d((padding, padding, 0, 0))
-        # pad height dimension with zeros (height, width)
-        conv_padding = (padding, 0)
+        pad_layer = nn.Sequential(
+            nn.CircularPad2d((padding, padding, 0, 0)),
+            nn.ReplicationPad2d((0, 0, padding, padding)),
+        )
 
-        # two applications of pad_layer, conv_padding, pad_layer, conv_padding
         self.conv = nn.Sequential(
             pad_layer,
             nn.Conv2d(
@@ -152,7 +151,7 @@ class Conv_block(nn.Module):
                 out_channels=ch_out,
                 kernel_size=kernel_size,
                 stride=stride,
-                padding=conv_padding,
+                padding=0,
                 bias=bias,
             ),
             nn.BatchNorm2d(ch_out),
@@ -163,7 +162,7 @@ class Conv_block(nn.Module):
                 out_channels=ch_out,
                 kernel_size=kernel_size,
                 stride=stride,
-                padding=conv_padding,
+                padding=0,
                 bias=bias,
             ),
             nn.BatchNorm2d(ch_out),
@@ -179,10 +178,10 @@ class Upsample(nn.Module):
     def __init__(self, ch_in, ch_out, kernel_size=3, stride=1, padding=1, bias=True):
         super().__init__()
 
-        # pad width dimension circularly (left, right, top, bottom)
-        pad_layer = nn.CircularPad2d((padding, padding, 0, 0))
-        # pad height dimension with zeros (height, width)
-        conv_padding = (padding, 0)
+        pad_layer = nn.Sequential(
+            nn.CircularPad2d((padding, padding, 0, 0)),
+            nn.ReplicationPad2d((0, 0, padding, padding)),
+        )
 
         self.up = nn.Sequential(
             pad_layer,
@@ -191,8 +190,8 @@ class Upsample(nn.Module):
                 in_channels=ch_in,
                 out_channels=ch_out,
                 kernel_size=kernel_size,
-                padding=conv_padding,
                 stride=stride,
+                padding=0,
                 bias=bias,
             ),
             nn.BatchNorm2d(ch_out),
@@ -214,10 +213,10 @@ class Attention_block(nn.Module):
         else:
             self.F_attn = 1
 
-        # pad width dimension circularly (left, right, top, bottom)
-        pad_layer = nn.CircularPad2d((padding, padding, 0, 0))
-        # pad height dimension with zeros (height, width)
-        conv_padding = (padding, 0)
+        pad_layer = nn.Sequential(
+            nn.CircularPad2d((padding, padding, 0, 0)),
+            nn.ReplicationPad2d((0, 0, padding, padding)),
+        )
 
         self.Wx = nn.Sequential(
             pad_layer,
@@ -226,7 +225,7 @@ class Attention_block(nn.Module):
                 out_channels=F_int,
                 kernel_size=kernel_size,
                 stride=stride,
-                padding=conv_padding,
+                padding=0,
                 bias=bias,
             ),
             nn.BatchNorm2d(F_int),
@@ -239,7 +238,7 @@ class Attention_block(nn.Module):
                 out_channels=F_int,
                 kernel_size=kernel_size,
                 stride=stride,
-                padding=conv_padding,
+                padding=0,
                 bias=bias,
             ),
             nn.BatchNorm2d(F_int),
@@ -252,7 +251,7 @@ class Attention_block(nn.Module):
                 out_channels=self.F_attn,
                 kernel_size=kernel_size,
                 stride=stride,
-                padding=conv_padding,
+                padding=0,
                 bias=bias,
             ),
             nn.BatchNorm2d(self.F_attn),
