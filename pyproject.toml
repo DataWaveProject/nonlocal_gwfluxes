@@ -4,7 +4,7 @@ version = "0.0.1"
 description = "Datadriven models for predicting gravity wave fluxes in climate models."
 authors = [{ name = "amangupta2"}]
 readme = "README.md"
-license = "LICENSE"
+license = "MIT"
 keywords = ["non-local", "gravity waves"]
 dynamic = [ "dependencies" ]
 requires-python = ">=3.10.0"
