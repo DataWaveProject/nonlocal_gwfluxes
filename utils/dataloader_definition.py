@@ -33,7 +33,6 @@ class Dataset_ANN_CNN(torch.utils.data.Dataset):
         self.ds = ds
 
         self.nlevels = levels
-
         # dimensions
         self.idim = len(self.ds["idim"])
         self.odim = len(self.ds["odim"])
@@ -42,6 +41,8 @@ class Dataset_ANN_CNN(torch.utils.data.Dataset):
         self.out = self.ds["output"]
         self.lat = self.ds["lat"]
         self.lon = self.ds["lon"]
+
+        self.nt = len(self.ds.time)
 
         # self.bs = batch_size
         self.domain = domain  # acceptable values: singlepoint, regional, global
