@@ -220,7 +220,7 @@ if model == "ann":
         features=features,
     )
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=bs_test, drop_last=False, shuffle=False, num_workers=8
+        testset, batch_size=bs_test, drop_last=False, shuffle=False, num_workers=0
     )
 
     idim = testset.idim
@@ -258,7 +258,7 @@ elif model == "attention":
         files=test_files, domain=domain, vertical=vertical, manual_shuffle=False, features=features
     )
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=bs_train, drop_last=False, shuffle=False, num_workers=8
+        testset, batch_size=bs_train, drop_last=False, shuffle=False, num_workers=0
     )
 
     ch_in = testset.idim
