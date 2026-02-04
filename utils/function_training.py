@@ -411,7 +411,7 @@ def Inference_and_Save_AttentionUNet(
                 xdata.to_netcdf(f"test-data/unet-{k}.nc")
 
             print("scripting...")
-            script_to_torchscript(model, filename="nlgw_unet_gpu_scripted.pt")
+            script_to_torchscript(model, filename=f"nlgw_unet_{device}_scripted.pt")
             print("complete")
 
         # write to netCDF
