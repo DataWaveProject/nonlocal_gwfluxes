@@ -51,7 +51,7 @@ source .nlgw/bin/activate
 Now we can install `poetry`
 
 ```bash
-pip install "poetry<2.0.0"
+pip install poetry
 ```
 
 The following command installs all of the necessary dependencies for `nonlocal_gwfluxes`.
