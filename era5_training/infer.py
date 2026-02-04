@@ -21,12 +21,13 @@ def main():
     input_data = load_nc_dataset(args.test_data_dir / Path(prefix + "-input.nc"))
     pred_reference = load_nc_dataset(args.test_data_dir / Path(prefix + "-predict.nc"))
 
-    model_path = args.scripted_model_dir / Path(f"nlgw_{prefix}_gpu_scripted.pt")
+    model_path = args.scripted_model_dir / Path(f"nlgw_{prefix}_{device}_scripted.pt")
     print(f"loading model {model_path}...")
     model = torch.jit.load(model_path)
 
     # run model inference
-    pred = model(torch.tensor(input_data).to(device))
+    with torch.no_grad():
+        pred = model(torch.tensor(input_data).to(device))
 
     pred = pred.cpu().detach().numpy()
     print("pred.shape = ", pred.shape)

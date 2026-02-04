@@ -108,7 +108,7 @@ print(f"input_dir={args.input_dir}")
 print(f"output_dir={args.output_dir}")
 print(f"script={args.script}")
 
-bs_train = 20  # 80 (80 works for most). (does not work for global uvthetaw)
+bs_train = 5  # 20  # 80 (80 works for most). (does not work for global uvthetaw)
 bs_test = bs_train
 
 # --------------------------------------------------
@@ -136,11 +136,13 @@ idir = str(args.input_dir) + "/"
 odir = str(args.output_dir) + "/"
 pref = str(args.ckpt_dir) + "/"  # "/scratch/users/ag4680/torch_saved_models/attention_unet/"
 if model == "ann":
-    ckpt = f"ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{epoch}.pt"
+    # ckpt = f"retrained_ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{epoch}.pt"
+    ckpt = f"retrained_L93_ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_era5_{features}__train_epoch{epoch}.pt"
     log_filename = f"./{teston}_inference_ann_cnn_{stencil}x{stencil}_{domain}_{vertical}_{features}_ckpt_epoch_{epoch}.txt"
 elif model == "attention":
     ckpt = (
-        f"attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{str(epoch).zfill(2)}.pt"
+        # f"attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{str(epoch).zfill(2)}.pt"
+        f"retrained_L93_attnunet_era5_{domain}_{vertical}_{features}_mseloss_train_epoch{epoch}.pt"
     )
     log_filename = (
         f"./{teston}_inference_attnunet_{domain}_{vertical}_{features}_ckpt_epoch_{epoch}.txt"
@@ -157,7 +159,7 @@ if device != "cpu":
 # Define test files
 # ------- To test on one year of ERA5 data
 test_files = []
-test_years = np.array([2010])
+test_years = np.array([2015])
 test_month = args.month  # int(sys.argv[4])  # np.arange(1,13)
 logger.info(f"Inference for month {test_month}")
 if teston == "era5":
@@ -174,7 +176,7 @@ if teston == "era5":
             )
     elif vertical == "global" or vertical == "stratosphere_update":
         if stencil == 1:
-            pre = idir + f"1x1_inputfeatures_u_v_theta_w_uw_vw_era5_training_data_hourly_"
+            pre = idir + f"1x1_inputfeatures_u_v_theta_w_uw_vw_gcp_era5_training_data_hourly_"
         else:
             pre = (
                 idir
@@ -183,7 +185,10 @@ if teston == "era5":
 
     for year in test_years:
         for months in np.arange(test_month, test_month + 1):
-            test_files.append(f"{pre}{year}_constant_mu_sigma_scaling{str(months).zfill(2)}.nc")
+            # test_files.append(f"{pre}{year}_constant_mu_sigma_scaling{str(months).zfill(2)}.nc") # usual
+            test_files.append(
+                f"{pre}{year}_L93_constant_mu_sigma_scaling{str(months).zfill(2)}.nc"
+            )  # L93
 
 elif teston == "ifs":
     if vertical == "stratosphere_only":
@@ -215,10 +220,11 @@ if model == "ann":
         features=features,
     )
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=bs_test, drop_last=False, shuffle=False, num_workers=8
+        testset, batch_size=bs_test, drop_last=False, shuffle=False, num_workers=0
     )
 
     idim = testset.idim
+
     odim = testset.odim
     hdim = 4 * idim
 
@@ -252,7 +258,7 @@ elif model == "attention":
         files=test_files, domain=domain, vertical=vertical, manual_shuffle=False, features=features
     )
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=bs_train, drop_last=False, shuffle=False, num_workers=8
+        testset, batch_size=bs_train, drop_last=False, shuffle=False, num_workers=0
     )
 
     ch_in = testset.idim

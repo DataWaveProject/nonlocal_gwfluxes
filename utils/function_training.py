@@ -192,7 +192,9 @@ def Inference_and_Save_ANN_CNN(
             INP = INP.reshape(T[0] * T[1], T[2], T[3], T[4])
             T = OUT.shape
             OUT = OUT.reshape(T[0] * T[1], -1)
-        PRED = model(INP)
+
+        with torch.no_grad():
+            PRED = model(INP)
 
         if is_script:
             print("saving data...")
@@ -205,7 +207,7 @@ def Inference_and_Save_ANN_CNN(
                 xdata.to_netcdf(f"test-data/ann-cnn-{k}.nc")
 
             print("scripting...")
-            script_to_torchscript(model, filename="nlgw_ann-cnn_gpu_scripted.pt")
+            script_to_torchscript(model, filename=f"nlgw_ann-cnn_{device}_scripted.pt")
             print("complete")
 
         S = PRED.shape
@@ -386,7 +388,7 @@ def Inference_and_Save_AttentionUNet(
     model.eval()
     count = 0
     for i, (INP, OUT) in enumerate(testloader):
-        # print([i,count])
+        # print([i, count])
         INP = INP.to(device)
         S = OUT.shape
         o_output[count : count + S[0], :, :, :] = OUT[
@@ -409,7 +411,7 @@ def Inference_and_Save_AttentionUNet(
                 xdata.to_netcdf(f"test-data/unet-{k}.nc")
 
             print("scripting...")
-            script_to_torchscript(model, filename="nlgw_unet_gpu_scripted.pt")
+            script_to_torchscript(model, filename=f"nlgw_unet_{device}_scripted.pt")
             print("complete")
 
         # write to netCDF

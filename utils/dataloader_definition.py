@@ -17,7 +17,9 @@ import torch
 
 # Dataloader for native training and transfer learning of single column ANNs and nonlocal ANN+CNN models both in the troposphere and the stratosphere
 class Dataset_ANN_CNN(torch.utils.data.Dataset):
-    def __init__(self, files, domain, vertical, stencil, manual_shuffle, features, region="1andes"):
+    def __init__(
+        self, files, domain, vertical, stencil, manual_shuffle, features, levels=93, region="1andes"
+    ):
         # super().__init__()
 
         _files = sorted(files)
@@ -30,6 +32,7 @@ class Dataset_ANN_CNN(torch.utils.data.Dataset):
 
         self.ds = ds
 
+        self.nlevels = levels
         # dimensions
         self.idim = len(self.ds["idim"])
         self.odim = len(self.ds["odim"])
@@ -49,15 +52,25 @@ class Dataset_ANN_CNN(torch.utils.data.Dataset):
         self.manual_shuffle = manual_shuffle
 
         if self.vertical == "global":
+            offset = 3  # lat, lon, zs
+            u_end = offset + self.nlevels  # self.nlevels + 3
+            v_end = u_end + self.nlevels  # 2 * self.nlevels + 3
+            theta_end = v_end + self.nlevels  # 3 * self.nlevels + 3
+            w_end = theta_end + self.nlevels  # 4 * self.nlevels + 3
             # 122 channels for each feature
             if self.features == "uvtheta":
-                self.v = np.arange(0, 369)  # for u,v,theta
+                # self.v = np.arange(0, 369)  # for u,v,theta
+                self.v = np.arange(0, theta_end)  # for L93
             elif self.features == "uvthetaw":
-                self.v = np.arange(0, 491)  # for u,v,theta,w
+                # self.v = np.arange(0, 551)  # for u,v,theta,w
+                self.v = np.arange(0, w_end)  # for L93
             elif self.features == "uvw":
+                # self.v = np.concatenate(
+                # (np.arange(0, 247), np.arange(369, 551)), axis=0
+                # )  # for u,v,w
                 self.v = np.concatenate(
-                    (np.arange(0, 247), np.arange(369, 491)), axis=0
-                )  # for u,v,w
+                    (np.arange(0, v_end), np.arange(theta_end, w_end)), axis=0
+                )  # for L93
             self.w = np.arange(0, self.odim)  # all vertical channels
 
         elif self.vertical == "stratosphere_only":
@@ -86,7 +99,7 @@ class Dataset_ANN_CNN(torch.utils.data.Dataset):
                 self.v = np.arange(0, 491)  # for u,v,theta,w
             elif self.features == "uvw":
                 self.v = np.concatenate(
-                    (np.arange(0, 247), np.arange(369, 491)), axis=0
+                    (np.arange(0, 247), np.arange(369, 551)), axis=0
                 )  # for u,v,w
             self.w = np.concatenate(
                 (np.arange(0, 60), np.arange(122, 182)), axis=0
@@ -261,7 +274,9 @@ class Dataset_ANN_CNN(torch.utils.data.Dataset):
 
 # Dataloader for native training and transfer learning of Attention Unet models both in the troposphere and the stratosphere
 class Dataset_AttentionUNet(torch.utils.data.Dataset):
-    def __init__(self, files, domain, vertical, manual_shuffle, features, region="1andes"):
+    def __init__(
+        self, files, domain, vertical, manual_shuffle, features, levels=93, region="1andes"
+    ):
         # domain = regional or global
         # vertical = global or stratosphere_only
 
@@ -276,6 +291,8 @@ class Dataset_AttentionUNet(torch.utils.data.Dataset):
         )
 
         self.ds = ds
+
+        self.nlevels = levels
 
         # dimensions
         self.idim = len(self.ds["idim"])
@@ -294,15 +311,25 @@ class Dataset_AttentionUNet(torch.utils.data.Dataset):
 
         # omitting lat, lon, zs for attention unet. To include, change 3 -> 0
         if self.vertical == "global":
+            offset = 3  # lat, lon, zs
+            u_end = offset + self.nlevels  # self.nlevels + 3
+            v_end = u_end + self.nlevels  # 2 * self.nlevels + 3
+            theta_end = v_end + self.nlevels  # 3 * self.nlevels + 3
+            w_end = theta_end + self.nlevels  # 4 * self.nlevels + 3
             # 122 channels for each feature
             if self.features == "uvtheta":
-                self.v = np.arange(3, 369)  # for u,v,theta
+                self.v = np.arange(3, theta_end)  # for L93
+                # self.v = np.arange(3, 369)  # for u,v,theta
             elif self.features == "uvthetaw":
-                self.v = np.arange(3, 491)  # for u,v,theta,w
+                self.v = np.arange(3, w_end)  # for L93
+                # self.v = np.arange(3, 551)  # for u,v,theta,w
             elif self.features == "uvw":
                 self.v = np.concatenate(
-                    (np.arange(3, 247), np.arange(369, 491)), axis=0
-                )  # for u,v,w
+                    (np.arange(3, v_end), np.arange(theta_end, w_end)), axis=0
+                )  # for L93
+                # self.v = np.concatenate(
+                #    (np.arange(3, 247), np.arange(369, 551)), axis=0
+                # )  # for u,v,w
             self.w = np.arange(0, self.odim)  # all vertical channels
 
         elif self.vertical == "stratosphere_only":
@@ -328,10 +355,10 @@ class Dataset_AttentionUNet(torch.utils.data.Dataset):
             if self.features == "uvtheta":
                 self.v = np.arange(3, 369)  # for u,v,theta
             elif self.features == "uvthetaw":
-                self.v = np.arange(3, 491)  # for u,v,theta,w
+                self.v = np.arange(3, 551)  # for u,v,theta,w
             elif self.features == "uvw":
                 self.v = np.concatenate(
-                    (np.arange(3, 247), np.arange(369, 491)), axis=0
+                    (np.arange(3, 247), np.arange(369, 551)), axis=0
                 )  # for u,v,w
             self.w = np.concatenate(
                 (np.arange(0, 60), np.arange(122, 182)), axis=0

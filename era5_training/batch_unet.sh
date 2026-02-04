@@ -24,25 +24,31 @@ source ~/nonlocal_gwfluxes/.nlgw/bin/activate
 #python training_attention_unet.py stratosphere_only uvthetawN2
 
 
-python training.py \
-	-M attention \
-        -d global  \
-        -v stratosphere_update \
-        -f uvw \
-        -i /glade/derecho/scratch/agupta/era5_training_data/ \
-        -o /glade/derecho/scratch/agupta/torch_saved_models/
+#python training.py \
+#	-M attention \
+#        -d global  \
+#        -v stratosphere_update \
+#        -f uvw \
+#        -i /glade/derecho/scratch/agupta/era5_training_data/ \
+#        -o /glade/derecho/scratch/agupta/torch_saved_models/
 
 
-#python inference.py \
-# 	-M attention \
-#	-d global  \
-#       -v stratosphere_update \
-#       -f uvw \
-# 	-e 100 \
-#	-s 1 \
-#	-t era5 \
-# 	-m 1 \
-#       -i /glade/derecho/scratch/agupta/era5_training_data/ \
+python inference.py \
+ 	-M attention \
+	-d global  \
+        -v global \
+        -f uvthetaw \
+ 	-e 100 \
+	-s 1 \
+	-t era5 \
+ 	-m 1 \
+	-i inputs/ \
+	-c model-huggingface/ \
+	-o outputs/ \
+	--script
+	
+	
+#	-i /glade/derecho/scratch/agupta/era5_training_data/ \
 #	-c /glade/derecho/scratch/agupta/torch_saved_models/ \
 #       -o /glade/derecho/scratch/agupta/gw_inference_files/
 
